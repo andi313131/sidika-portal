@@ -3,10 +3,19 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { GoogleGenAI, Type } from "@google/genai";
 
+export const dynamic = 'force-dynamic';
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export async function POST(req: Request) {
     try {
+        // 🛡️ BYPASS KHUSUS PROSES BUILD VERCEL
+        // Jika kode sedang dirakit oleh Vercel, langsung kembalikan respon sukses tiruan
+        // agar proses kompilasi tidak mandek akibat fungsi auth()
+        if (process.env.NEXT_PHASE === "phase-production-build") {
+            return NextResponse.json({ success: true, message: "Bypass build phase" });
+        }
+
+        // 1. Pengecekan Autentikasi secara aman saat aplikasi sudah Live
         const session = await auth();
         if (!session) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -28,7 +37,7 @@ export async function POST(req: Request) {
             4. references: Ambil seluruh daftar pustaka atau referensi rujukan di akhir dokumen. Jangan masukkan kata judul "DAFTAR PUSTAKA"-nya, ambil langsung isi daftarnya saja.
 
             Berikut teks dokumen yang harus kamu analisis:
-            ${rawText}
+            \${rawText}
         `;
 
         const aiConfig = {
