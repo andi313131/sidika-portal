@@ -1,5 +1,6 @@
 // app/api/ai/split/route.ts
 import { NextResponse } from "next/server";
+import { auth } from "@/auth";
 import { GoogleGenAI, Type } from "@google/genai";
 
 export const dynamic = 'force-dynamic';
@@ -7,23 +8,15 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export async function POST(req: Request) {
     try {
-        // 🛡️ Taktik Brutal 1: Langsung potong jalur jika dalam fase build Vercel
-        if (process.env.NEXT_PHASE === "phase-production-build" || process.env.NODE_ENV === "production" && !process.env.VERCEL_URL) {
-            return NextResponse.json({ success: true });
+        // 1. Pengecekan Autentikasi Menggunakan Auth.js v5
+        const session = await auth();
+        if (!session) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
         const { rawText } = await req.json();
         if (!rawText) {
             return NextResponse.json({ error: "Teks kosong" }, { status: 400 });
-        }
-
-        // 🛡️ Taktik Brutal 2: Lazy Load Auth (Impor hanya saat web diakses Live)
-        // Ini mencegah Vercel nge-crash pas kompilasi statis top-level file
-        const { auth } = await require("@/auth");
-        const session = await auth();
-
-        if (!session) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
         const promptAI = `

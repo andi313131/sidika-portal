@@ -1,13 +1,12 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+  binaryTargets   = ["native", "rhel-vany-1.0.0", "debian-openssl-3.0.x"]
 }
 
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
-
 model User {
   id            String            @id @default(uuid())
   name          String?
