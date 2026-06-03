@@ -1,6 +1,5 @@
 // app/api/ai/split/route.ts
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { GoogleGenAI, Type } from "@google/genai";
 
 export const dynamic = 'force-dynamic';
@@ -8,22 +7,23 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export async function POST(req: Request) {
     try {
-        // 🛡️ BYPASS KHUSUS PROSES BUILD VERCEL
-        // Jika kode sedang dirakit oleh Vercel, langsung kembalikan respon sukses tiruan
-        // agar proses kompilasi tidak mandek akibat fungsi auth()
-        if (process.env.NEXT_PHASE === "phase-production-build") {
-            return NextResponse.json({ success: true, message: "Bypass build phase" });
-        }
-
-        // 1. Pengecekan Autentikasi secara aman saat aplikasi sudah Live
-        const session = await auth();
-        if (!session) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        // 🛡️ Taktik Brutal 1: Langsung potong jalur jika dalam fase build Vercel
+        if (process.env.NEXT_PHASE === "phase-production-build" || process.env.NODE_ENV === "production" && !process.env.VERCEL_URL) {
+            return NextResponse.json({ success: true });
         }
 
         const { rawText } = await req.json();
         if (!rawText) {
             return NextResponse.json({ error: "Teks kosong" }, { status: 400 });
+        }
+
+        // 🛡️ Taktik Brutal 2: Lazy Load Auth (Impor hanya saat web diakses Live)
+        // Ini mencegah Vercel nge-crash pas kompilasi statis top-level file
+        const { auth } = await require("@/auth");
+        const session = await auth();
+
+        if (!session) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
         const promptAI = `
@@ -57,7 +57,6 @@ export async function POST(req: Request) {
         let extractedText = "";
 
         try {
-            // Tembakan Pertama: Pakai model Flash yang super cepat
             const aiResponse = await ai.models.generateContent({
                 model: "gemini-2.5-flash",
                 contents: promptAI,
@@ -65,7 +64,6 @@ export async function POST(req: Request) {
             });
             extractedText = aiResponse.text || "";
         } catch (flashError: any) {
-            // Jika kena limit 503 / High Demand, otomatis lempar ke model Pro
             if (flashError?.status === 503 || flashError?.message?.includes("503")) {
                 console.warn("Gemini Flash sibuk, beralih ke Gemini Pro...");
                 try {
@@ -81,18 +79,12 @@ export async function POST(req: Request) {
             }
         }
 
-        // --- 🛡️ BAN SEREP: JIKA GOOGLE CLOUD DOWN TOTAL, GUNAKAN PARSING LOCAL REGEX ---
         if (!extractedText) {
             console.log("Menjalankan Pemisahan Teks Menggunakan Kode Regex Lokal...");
-
-            // Ambil baris pertama sebagai tebakan judul
             const lines = rawText.split("\n").map((l: string) => l.trim()).filter(Boolean);
             const fallbackTitle = lines[0] || "Dokumen Tanpa Judul";
-
-            // Cari bagian author
             const fallbackAuthors = lines.slice(1, 5).join(", ") || "Penulis Tidak Terdeteksi";
 
-            // Pisahkan isi dan daftar pustaka secara manual
             const splitDapus = rawText.split(/(DAFTAR PUSTAKA|REFERENSI)/i);
             const fallbackContent = splitDapus[0] || rawText;
             const fallbackReferences = splitDapus[2] || "Daftar pustaka tidak terdeteksi otomatis.";
@@ -105,7 +97,6 @@ export async function POST(req: Request) {
             });
         }
 
-        // Jika AI sukses mengembalikan data
         const parsedData = JSON.parse(extractedText.trim());
         return NextResponse.json(parsedData);
 
