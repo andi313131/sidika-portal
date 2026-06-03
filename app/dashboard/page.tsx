@@ -23,6 +23,15 @@ export default function DashboardPage() {
     const [isAdmin, setIsAdmin] = useState<boolean>(false);
     const [activeTab, setActiveTab] = useState<"my-articles" | "review-panel">("my-articles");
 
+    // 🛡️ FUNGSI SAKTI: Bersihkan string Base64 panjang agar kartu dashboard tidak freeze & rusak
+    const getCleanPreview = (text: string) => {
+        if (!text) return "";
+        // Regex untuk menangkap pola string base64 gambar
+        const base64Regex = /data:image\/[a-zA-Z]+;base64,[^ \n\r\t]+/g;
+        // Ganti teks base64 yang sepanjang jutaan karakter dengan penanda ringkas
+        return text.replace(base64Regex, "[📸 Gambar/Grafik Terlampir]");
+    };
+
     const fetchDashboardData = async () => {
         try {
             const res = await fetch("/api/articles");
@@ -49,7 +58,7 @@ export default function DashboardPage() {
                 }
             }
         } catch (err) {
-            console.error("Gagal memuat data dashboard", err);
+            console.error("Gagal membuat data dashboard", err);
         } finally {
             setLoading(false);
         }
@@ -81,7 +90,6 @@ export default function DashboardPage() {
         }
     };
 
-    // --- 🗑️ FUNGSI SAKTI DELETE ARTIKEL ---
     const handleDelete = async (articleId: string) => {
         const yakin = confirm("⚠️ PERINGATAN: Apakah kamu yakin ingin menghapus artikel ini secara permanen dari database?");
         if (!yakin) return;
@@ -95,7 +103,6 @@ export default function DashboardPage() {
 
             if (res.ok) {
                 alert("🗑️ Artikel berhasil dihapus!");
-                // Hapus langsung dari state lokal biar responsif instant tanpa reload
                 setArticles(prev => prev.filter(art => art.id !== articleId));
                 setPendingArticles(prev => prev.filter(art => art.id !== articleId));
             } else {
@@ -184,12 +191,12 @@ export default function DashboardPage() {
                                         <h3 className="font-bold text-gray-900 line-clamp-2 text-base mb-2">
                                             {article.title}
                                         </h3>
-                                        <p className="text-gray-500 text-xs line-clamp-4 leading-relaxed bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-                                            {article.content}
+                                        {/* 🛠️ FIX: Bungkus dengan getCleanPreview */}
+                                        <p className="text-gray-500 text-xs line-clamp-4 leading-relaxed bg-slate-50 p-2.5 rounded-lg border border-slate-100 whitespace-pre-line">
+                                            {getCleanPreview(article.content)}
                                         </p>
                                     </div>
 
-                                    {/* Aksi Kolom Reviewer */}
                                     <div className="mt-5 pt-4 border-t border-gray-100 flex flex-col gap-2">
                                         <div className="flex items-center justify-between">
                                             <Link href={`/articles/${article.slug}`} className="text-xs font-semibold text-slate-500 hover:underline">
@@ -202,7 +209,6 @@ export default function DashboardPage() {
                                                 Approve
                                             </button>
                                         </div>
-                                        {/* Tambahan opsi buang sampah testing langsung dari panel review */}
                                         <button
                                             onClick={() => handleDelete(article.id)}
                                             className="w-full text-center text-[11px] font-semibold text-red-500 hover:bg-red-50 py-1.5 rounded-lg border border-transparent hover:border-red-100 transition-all cursor-pointer"
@@ -241,12 +247,12 @@ export default function DashboardPage() {
                                         <h3 className="font-bold text-gray-900 line-clamp-2 text-base mb-2">
                                             {article.title}
                                         </h3>
-                                        <p className="text-gray-500 text-xs line-clamp-4 leading-relaxed">
-                                            {article.content}
+                                        {/* 🛠️ FIX: Bungkus dengan getCleanPreview */}
+                                        <p className="text-gray-500 text-xs line-clamp-4 leading-relaxed whitespace-pre-line">
+                                            {getCleanPreview(article.content)}
                                         </p>
                                     </div>
 
-                                    {/* Bagian Tombol Aksi Bawah */}
                                     <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between">
                                         <button
                                             onClick={() => handleDelete(article.id)}
