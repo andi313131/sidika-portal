@@ -21,7 +21,7 @@ export default function WriteArticlePage() {
     const [ocrProgress, setOcrProgress] = useState<string>("");
     const [isPublishing, setIsPublishing] = useState<boolean>(false);
 
-    // --- FUNGSI UNGGAH GAMBAR COVER INSTAN ---
+    // --- FUNGSI UNGGAH GAMBAR (BASE64 INTEGRATION) ---
     const handleImageUpload = async (file: File, isCover: boolean) => {
         const formData = new FormData();
         formData.append("file", file);
@@ -35,14 +35,18 @@ export default function WriteArticlePage() {
 
             if (res.ok) {
                 const data = await res.json();
+
+                // 🛠️ FIX: Ganti data.url menjadi data.imageUrl sesuai respon API Base64 kita
+                const secureUrl = data.imageUrl || data.url;
+
                 if (isCover) {
-                    setCoverUrl(data.url);
-                    alert("📸 Gambar cover berhasil diunggah!");
+                    setCoverUrl(secureUrl);
+                    alert("📸 Gambar cover berhasil diproses!");
                 }
-                return data.url as string;
+                return secureUrl as string;
             } else {
                 const errData = await res.json();
-                alert(`Gagal mengunggah gambar: ${errData.message || "Terjadi kesalahan"}`);
+                alert(`Gagal memproses gambar: ${errData.error || errData.message || "Terjadi kesalahan"}`);
                 return null;
             }
         } catch (error) {
@@ -75,11 +79,11 @@ export default function WriteArticlePage() {
                 const textSebelumnya = mainContent.substring(0, selectionStart);
                 const textSesudahnya = mainContent.substring(selectionEnd);
 
-                // Jalankan proses upload background via API upload kita yang kemarin
+                // Jalankan proses upload background via API upload Base64 kita
                 const uploadedUrl = await handleImageUpload(file, false);
 
                 if (uploadedUrl) {
-                    // Masukkan baris baru berisi path gambar otomatis di sela-sela teks paragraf lo
+                    // Masukkan string Base64 gambar otomatis di sela-sela teks paragraf lo
                     const templateGambar = `\n\n${uploadedUrl}\n\n`;
                     setMainContent(textSebelumnya + templateGambar + textSesudahnya);
 
@@ -305,7 +309,7 @@ export default function WriteArticlePage() {
                             rows={12}
                             value={mainContent}
                             disabled={isPublishing}
-                            onPaste={handleContentPaste} // 🔥 SUNTIKAN EVENT PASTE SAKTI
+                            onPaste={handleContentPaste}
                             onChange={(e) => setMainContent(e.target.value)}
                             placeholder="Tuliskan isi esai... Taruh kursor di sini lalu tekan Ctrl + V jika ingin menyisipkan gambar hasil screenshot PDF secara instan!"
                             className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all text-base leading-relaxed"
