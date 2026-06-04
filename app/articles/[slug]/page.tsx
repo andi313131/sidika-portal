@@ -104,14 +104,10 @@ export default async function ArticleDetailPage({ params }: PageProps) {
                 <div className="flex items-center gap-2">
                     <span className="font-bold text-emerald-800">UNSIL Portal</span>
                     <span>•</span>
-                    {/* 🛠️ SINKRONISASI DINAMIS PERMANEN: Menyesuaikan Role & Field Asli Database */}
+                    {/* 🛠️ FIX TAG PENUTUP BERES: Data render 100% aman */}
                     <span>
-                        Diterbitkan oleh: <strong>
-                            {article.author?.fullName || article.author?.name || "Mahasiswa"}
-                        </strong>
-                        {article.author?.nim && (
-                            ` (${article.author.role === "lecturer" ? "NIP/NIDN" : "NIM"}: ${article.author.nim})`
-                        )}
+                        Diterbitkan oleh: <strong>{article.author?.fullName || article.author?.name || "Mahasiswa"}</strong>
+                        {article.author?.nim && ` (${article.author.role === "lecturer" ? "NIP/NIDN" : "NIM"}: ${article.author.nim})`}
                         {article.author?.studyProgram && ` - Jurusan ${article.author.studyProgram}`}
                     </span>
                 </div>
@@ -145,3 +141,42 @@ export default async function ArticleDetailPage({ params }: PageProps) {
                 </aside>
 
                 {/* KOLOM KANAN: KONTEN ARTIKEL UTAMA */}
+                <main className="flex-1 max-w-4xl border-l border-gray-200/60 md:pl-8">
+
+                    {/* FOTO COVER UTAMA ESAL */}
+                    {article.coverImageUrl && (
+                        <div className="w-full max-h-[380px] overflow-hidden rounded-2xl mb-6 bg-slate-50 border border-gray-200 shadow-sm shadow-slate-100">
+                            <img
+                                src={article.coverImageUrl}
+                                alt={article.title}
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                    )}
+
+                    <div id="title-top" className="border-b border-gray-300 pb-1 mb-4">
+                        <h1 className="text-3xl md:text-4xl font-serif text-black font-normal tracking-tight">
+                            {article.title}
+                        </h1>
+                        <p className="text-xs text-gray-500 mt-2">Dari Portal Artikel Ilmiah Universitas Siliwangi, ensiklopedia bebas mahasiswa.</p>
+                    </div>
+
+                    {/* Notifikasi Box Ala Wikipedia */}
+                    <div className="bg-gray-50 border-l-4 border-blue-600 border border-gray-300 p-3 mb-6 text-xs flex items-start gap-3">
+                        <span className="text-lg">ℹ️</span>
+                        <div>
+                            <p className="text-gray-900">Artikel gagasan ini sedang dalam tahap <strong>akselerasi strategis</strong>.</p>
+                            <p className="text-gray-500 mt-0.5">Mohon bantu kembangkan dengan menambahkan referensi terpercaya dari DJP atau Kemenaker.</p>
+                        </div>
+                    </div>
+
+                    {/* Area Teks Olahan Wikipedia */}
+                    <div className="content-wiki select-text">
+                        {renderWikipediaContent()}
+                    </div>
+                </main>
+
+            </div>
+        </div>
+    );
+}
