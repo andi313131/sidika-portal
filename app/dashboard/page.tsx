@@ -130,9 +130,8 @@ export default function DashboardPage() {
                         </p>
                     </div>
 
-                    {/* 🛠️ MODIFIKASI: Penambahan Flex Container agar Tombol Profil & Tulis Artikel Berdampingan */}
+                    {/* Tombol Navigasi Berdampingan */}
                     <div className="flex items-center gap-3 shrink-0">
-                        {/* 👤 TOMBOL MENU PROFIL BARU */}
                         <Link
                             href="/dashboard/profile"
                             className="inline-flex items-center justify-center px-5 py-2.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold rounded-xl transition-all shadow-sm cursor-pointer text-sm"
@@ -140,7 +139,6 @@ export default function DashboardPage() {
                             👤 Edit Profil
                         </Link>
 
-                        {/* TOMBOL TULIS ARTIKEL (Bawaan lo) */}
                         <Link
                             href="/write"
                             className="inline-flex items-center justify-center px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold rounded-xl transition-all shadow-sm shadow-emerald-700/10 cursor-pointer text-sm shrink-0"
@@ -175,8 +173,31 @@ export default function DashboardPage() {
 
                 {/* KONTEN UTAMA */}
                 {loading ? (
-                    <div className="text-center py-12 text-gray-500 font-medium animate-pulse">
-                        ⏳ Memuat data portal...
+                    /* 🌟 DESAIN LOADING BARU: 3 Kolom Skeleton Cards Berdenyut Kontras */
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 animate-pulse">
+                        {[1, 2, 3].map((n) => (
+                            <div key={n} className="bg-white border border-gray-200 rounded-2xl p-5 flex flex-col justify-between h-[240px] shadow-sm">
+                                <div>
+                                    <div className="flex items-center justify-between gap-2 mb-4">
+                                        <div className="h-5 w-16 bg-gray-200 rounded-md"></div>
+                                        <div className="h-3 w-24 bg-gray-200 rounded-md"></div>
+                                    </div>
+                                    <div className="space-y-2 mb-4">
+                                        <div className="h-4 w-11/12 bg-gray-200 rounded-md"></div>
+                                        <div className="h-4 w-3/4 bg-gray-200 rounded-md"></div>
+                                    </div>
+                                    <div className="p-3 bg-gray-50 rounded-xl border border-gray-100/80 space-y-2">
+                                        <div className="h-2.5 w-full bg-gray-200 rounded-md"></div>
+                                        <div className="h-2.5 w-full bg-gray-200 rounded-md"></div>
+                                        <div className="h-2.5 w-4/5 bg-gray-200 rounded-md"></div>
+                                    </div>
+                                </div>
+                                <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
+                                    <div className="h-3 w-10 bg-gray-200 rounded-md"></div>
+                                    <div className="h-3 w-12 bg-gray-200 rounded-md"></div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 ) : activeTab === "review-panel" ? (
                     /* --- 1. TAMPILAN GUDANG REVIEW ADMIN --- */

@@ -51,7 +51,7 @@ export default function ProfilePage() {
         e.preventDefault();
 
         // Peringatan konfirmasi akhir sebelum submit permanen
-        const confirmSave = confirm("⚠️ PERINGATAN: Nama Lengkap dan NIM/NIP yang lo masukkan akan DIKUNCI PERMANEN di database dan tidak akan bisa diubah lagi. Apakah data sudah benar?");
+        const confirmSave = confirm("⚠️ PERINGATAN: Nama Lengkap dan NIM/NIP yang anda masukkan akan DIKUNCI PERMANEN di database dan tidak akan bisa diubah lagi. Apakah data sudah benar?");
         if (!confirmSave) return;
 
         setIsSaving(true);
@@ -65,7 +65,7 @@ export default function ProfilePage() {
             const data = await res.json();
 
             if (res.ok) {
-                alert("🔒 Sukses! Data identitas permanen lo resmi dikunci ke sistem.");
+                alert("🔒 Sukses! Data identitas permanen anda resmi dikunci ke sistem.");
                 setHasSavedName(true);
                 setHasSavedIdentity(true);
                 router.refresh();
@@ -93,7 +93,7 @@ export default function ProfilePage() {
             <div className="max-w-2xl mx-auto bg-white rounded-3xl shadow-sm border border-gray-200 p-6 md:p-8">
 
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">👤 Pengaturan Profil Akun</h1>
-                <p className="text-gray-500 text-sm mb-6">Isi data diri lo dengan benar untuk keperluan penguncian identitas publikasi ilmiah resmi.</p>
+                <p className="text-gray-500 text-sm mb-6">Isi data diri anda dengan benar untuk keperluan penguncian identitas publikasi ilmiah resmi.</p>
 
                 {/* ⚠️ BANNER PERINGATAN STRATEGIS */}
                 {(!hasSavedName || !hasSavedIdentity) ? (
@@ -105,7 +105,7 @@ export default function ProfilePage() {
                                 Demi keaslian sitasi karya ilmiah UNSIL Portal, demi menghindari pemalsuan akun,
                                 <strong> Nama Lengkap</strong> dan <strong>Nomor Induk (NIM/NIP)</strong> hanya bisa diisi
                                 <span className="underline font-bold mx-1">SATU KALI saja</span>.
-                                Setelah lo menekan tombol simpan, kolom input tersebut akan otomatis dikunci permanen oleh database sistem.
+                                Setelah anda menekan tombol simpan, kolom input tersebut akan otomatis dikunci permanen oleh database sistem.
                             </p>
                         </div>
                     </div>
@@ -115,7 +115,7 @@ export default function ProfilePage() {
                         <div>
                             <p className="font-bold uppercase tracking-wider mb-0.5">Identitas Terverifikasi & Dikunci</p>
                             <p className="leading-relaxed text-emerald-700">
-                                Akun lo sudah terikat secara legal dengan database kampus Universitas Siliwangi. Nama Lengkap dan NIM/NIP tidak dapat diubah kembali untuk menjaga validitas hak cipta esai.
+                                Akun anda sudah terikat secara legal dengan database kampus Universitas Siliwangi. Nama Lengkap dan NIM/NIP tidak dapat diubah kembali untuk menjaga validitas hak cipta esai.
                             </p>
                         </div>
                     </div>
@@ -154,7 +154,7 @@ export default function ProfilePage() {
                             value={fullName}
                             disabled={hasSavedName} // Otomatis mengunci jika sudah tersimpan
                             onChange={(e) => setFullName(e.target.value)}
-                            placeholder="Masukkan nama lengkap lo..."
+                            placeholder="Masukkan nama lengkap anda..."
                             className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all text-sm font-medium disabled:bg-gray-100 disabled:text-gray-500 disabled:border-gray-200"
                         />
                     </div>
