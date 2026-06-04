@@ -7,11 +7,15 @@ const ALLOWED_DOMAINS = ["student.unsil.ac.id", "gmail.com"];
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt" }, // 💡 PAKSA STRATEGI JWT: Agar sinkron dengan modifikasi token ID di NextAuth v5
+  session: { strategy: "jwt" }, // Paksa strategi JWT agar ID user sinkron di NextAuth v5
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+
+      // 🛠️ BARIS SAKTI UTAMA: Otomatis mengawinkan akun biar gak kena OAuthAccountNotLinked
+      allowDangerousEmailAccountLinking: true,
+
       authorization: {
         params: {
           prompt: "select_account",
@@ -33,7 +37,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return true;
     },
-    // 💡 SOLUSI SAKTI NEXTAUTH V5: Oper ID dari akun database lewat JWT Token baru ke Session
+    // Oper ID dari akun database lewat JWT Token baru ke Session
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
@@ -42,7 +46,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async session({ session, token }) {
       if (session.user && token.id) {
-        session.user.id = token.id as string; // 🔐 ID nempel aman dan dikenali oleh TypeScript!
+        session.user.id = token.id as string; // ID nempel aman ke session dashboard lo
       }
       return session;
     },
