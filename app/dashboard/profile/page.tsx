@@ -17,25 +17,24 @@ export default function ProfilePage() {
     const [loading, setLoading] = useState<boolean>(true);
     const [isSaving, setIsSaving] = useState<boolean>(false);
 
-    // 1. Ambil data user yang sedang aktif saat halaman pertama kali dibuka
+    // 🛠️ FIX TOTAL: Ambil data mendalam langsung dari API profile database
     useEffect(() => {
         const fetchUserData = async () => {
             try {
-                const res = await fetch("/api/auth/session");
+                const res = await fetch("/api/user/profile"); // 👈 Diubah kesini biar dapet data NIM, Jurusan, dll
                 if (res.ok) {
-                    const sessionData = await res.json();
-                    if (sessionData?.user) {
-                        // Ambil data user mendalam dari database via endpoint session atau buat API detail user terpisah
-                        setName(sessionData.user.name || "");
-                        setEmail(sessionData.user.email || "");
-                        setNim(sessionData.user.nim || "");
-                        setFaculty(sessionData.user.faculty || "");
-                        setMajor(sessionData.user.major || "");
-                        setBio(sessionData.user.bio || "");
+                    const userData = await res.json();
+                    if (userData) {
+                        setName(userData.name || "");
+                        setEmail(userData.email || "");
+                        setNim(userData.nim || "");
+                        setFaculty(userData.faculty || "");
+                        setMajor(userData.major || "");
+                        setBio(userData.bio || "");
                     }
                 }
             } catch (err) {
-                console.error("Gagal memuat data user", err);
+                console.error("Gagal memuat data user dari database", err);
             } finally {
                 setLoading(false);
             }
@@ -86,7 +85,7 @@ export default function ProfilePage() {
                 <p className="text-gray-500 text-sm mb-8">Kelola informasi data diri dan identitas akademis lo untuk keperluan publikasi esai ilmiah.</p>
 
                 <form onSubmit={handleSaveProfile} className="space-y-5">
-                    {/* Email Box (Disabled karena Email adalah identitas OAuth utama login) */}
+                    {/* Email Box */}
                     <div>
                         <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Alamat Email (Akun Google)</label>
                         <input
@@ -152,7 +151,7 @@ export default function ProfilePage() {
                             rows={4}
                             value={bio}
                             onChange={(e) => setBio(e.target.value)}
-                            placeholder="Ceritakan ketertarikan riset riset ilmiah lo, misal: Fokus pada riset pasar modal Indonesia, akuntansi keuangan, atau makroekonomi..."
+                            placeholder="Ceritakan ketertarikan riset ilmiah lo, misal: Fokus pada riset pasar modal Indonesia, akuntansi keuangan, atau makroekonomi..."
                             className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all text-sm leading-relaxed"
                         />
                     </div>
