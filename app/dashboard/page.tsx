@@ -68,6 +68,30 @@ export default function DashboardPage() {
         fetchDashboardData();
     }, []);
 
+    // 🚪 FUNGSI LOGOUT INTEGRASI NEXTAUTH VIA ENDPOINT SIGN_OUT
+    const handleLogout = async () => {
+        const yakin = confirm("Apakah kamu yakin ingin keluar dari sistem SIDIKA Portal?");
+        if (!yakin) return;
+
+        try {
+            // NextAuth otomatis membersihkan cookie session lewat endpoint bawaan ini
+            const res = await fetch("/api/auth/signout", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" }
+            });
+
+            if (res.ok || res.redirected) {
+                // Lempar balik ke halaman login utama secara paksa
+                window.location.href = "/";
+            } else {
+                alert("Gagal keluar dari sesi aktif.");
+            }
+        } catch (error) {
+            console.error("Logout_Error:", error);
+            alert("Terjadi gangguan jaringan saat mencoba log out.");
+        }
+    };
+
     const handleApprove = async (articleId: string) => {
         const setuju = confirm("Apakah esai ilmiah ini sudah layak dan sesuai dengan standar kurasi publikasi?");
         if (!setuju) return;
@@ -130,21 +154,29 @@ export default function DashboardPage() {
                         </p>
                     </div>
 
-                    {/* Tombol Navigasi Berdampingan */}
-                    <div className="flex items-center gap-3 shrink-0">
+                    {/* Menu Navigasi Nav Bar Atas */}
+                    <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
                         <Link
                             href="/dashboard/profile"
-                            className="inline-flex items-center justify-center px-5 py-2.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold rounded-xl transition-all shadow-sm cursor-pointer text-sm"
+                            className="inline-flex items-center justify-center px-4 py-2.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold rounded-xl transition-all shadow-sm cursor-pointer text-sm gap-1"
                         >
-                            👤 Edit Profil
+                            👤 Profil
                         </Link>
 
                         <Link
                             href="/write"
-                            className="inline-flex items-center justify-center px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold rounded-xl transition-all shadow-sm shadow-emerald-700/10 cursor-pointer text-sm shrink-0"
+                            className="inline-flex items-center justify-center px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold rounded-xl transition-all shadow-sm shadow-emerald-700/10 cursor-pointer text-sm shrink-0 gap-1"
                         >
-                            ✏️ Tulis Artikel Baru
+                            ✏️ Tulis Esai
                         </Link>
+
+                        {/* 🚪 TOMBOL LOGOUT INTERAKTIF BARU */}
+                        <button
+                            onClick={handleLogout}
+                            className="inline-flex items-center justify-center px-4 py-2.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 font-semibold rounded-xl transition-all shadow-sm cursor-pointer text-sm gap-1"
+                        >
+                            🚪 Keluar
+                        </button>
                     </div>
                 </div>
 
@@ -173,7 +205,7 @@ export default function DashboardPage() {
 
                 {/* KONTEN UTAMA */}
                 {loading ? (
-                    /* 🌟 DESAIN LOADING BARU: 3 Kolom Skeleton Cards Berdenyut Kontras */
+                    /* 🌟 3 Kolom Skeleton Cards Berdenyut Kontras */
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 animate-pulse">
                         {[1, 2, 3].map((n) => (
                             <div key={n} className="bg-white border border-gray-200 rounded-2xl p-5 flex flex-col justify-between h-[240px] shadow-sm">
@@ -206,7 +238,7 @@ export default function DashboardPage() {
                             <span className="text-4xl block mb-3">✅</span>
                             <h3 className="text-base font-semibold text-gray-900">Gudang Antrean Bersih</h3>
                             <p className="text-gray-500 text-sm max-w-sm mx-auto mt-1">
-                                Semua draf esai mahasiswa UNSIL sudah selesai lo review, Ndik.
+                                Semua draf esai mahasiswa UNSIL sudah selesai anda review, Ndik.
                             </p>
                         </div>
                     ) : (
