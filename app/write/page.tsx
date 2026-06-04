@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, ChangeEvent, FormEvent, ClipboardEvent } from "react";
+import { useState, ChangeEvent, FormEvent, ClipboardEvent, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function WriteArticlePage() {
     const router = useRouter();
+    const mainContentRef = useRef<HTMLTextAreaElement>(null); // 💡 Ref untuk mendeteksi posisi kursor isi utama
 
-    // 🛠️ MODIFIKASI: State Form Terpisah Sesuai Standar Jurnal Ilmiah
+    // State Form Terpisah Sesuai Standar Jurnal Ilmiah
     const [title, setTitle] = useState<string>("");
     const [authors, setAuthors] = useState<string>("");
     const [abstract, setAbstract] = useState<string>("");
@@ -22,6 +23,52 @@ export default function WriteArticlePage() {
     const [loading, setLoading] = useState<boolean>(false);
     const [ocrProgress, setOcrProgress] = useState<string>("");
     const [isPublishing, setIsPublishing] = useState<boolean>(false);
+
+    // --- 🛠️ FUNGSI SAKTI: FORMAT TEXT INJECTION (Bold, Italic, Underline) ---
+    const applyFormatting = (formatType: "bold" | "italic" | "underline") => {
+        const textarea = mainContentRef.current;
+        if (!textarea) return;
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selectedText = mainContent.substring(start, end);
+
+        let formattedText = "";
+        let cursorOffset = 0;
+
+        // Taktik pembungkusan teks berdasarkan tipe format
+        switch (formatType) {
+            case "bold":
+                formattedText = `**${selectedText || "teks_tebal"}**`;
+                cursorOffset = selectedText ? formattedText.length : 2;
+                break;
+            case "italic":
+                formattedText = `*${selectedText || "teks_miring"}*`;
+                cursorOffset = selectedText ? formattedText.length : 1;
+                break;
+            case "underline":
+                formattedText = `<u>${selectedText || "teks_garis_bawah"}</u>`;
+                cursorOffset = selectedText ? formattedText.length : 3;
+                break;
+        }
+
+        const newContent = mainContent.substring(0, start) + formattedText + mainContent.substring(end);
+        setMainContent(newContent);
+
+        // Kembalikan fokus kursor secara anggun ke textarea setelah tombol diklik
+        setTimeout(() => {
+            textarea.focus();
+            if (selectedText) {
+                // Jika memblok teks, kursor ditaruh di akhir hasil format
+                textarea.setSelectionRange(start + formattedText.length, start + formattedText.length);
+            } else {
+                // Jika tidak memblok, kursor otomatis memblok kata penampung (placeholder) di dalam tag
+                const newStart = start + cursorOffset;
+                const newEnd = newStart + (formatType === "bold" ? 10 : formatType === "italic" ? 11 : 16);
+                textarea.setSelectionRange(newStart, newEnd);
+            }
+        }, 50);
+    };
 
     // --- FUNGSI UNGGAH GAMBAR (BASE64 INTEGRATION) ---
     const handleImageUpload = async (file: File, isCover: boolean) => {
@@ -58,7 +105,7 @@ export default function WriteArticlePage() {
         }
     };
 
-    // --- 🔥 FUNGSI SAKTI: INTERCEPT PASTE GAMBAR DI ISI UTAMA ---
+    // --- FUNGSI INTERCEPT PASTE GAMBAR DI ISI UTAMA ---
     const handleContentPaste = async (e: ClipboardEvent<HTMLTextAreaElement>) => {
         const items = e.clipboardData?.items;
         if (!items) return;
@@ -155,7 +202,6 @@ export default function WriteArticlePage() {
                 const parsedResult = await aiRes.json();
                 setTitle(parsedResult.title || "");
                 setAuthors(parsedResult.authors || "");
-                // 🛠️ Hubungkan properti baru dari AI ke state form lo
                 setAbstract(parsedResult.abstract || "");
                 setMethodology(parsedResult.methodology || "");
                 setMainContent(parsedResult.content || "");
@@ -174,7 +220,7 @@ export default function WriteArticlePage() {
         }
     };
 
-    // --- FUNGSI SUBMIT DATA ARTIKEL (FORMAT MERGE BARU) ---
+    // --- FUNGSI SUBMIT DATA ARTIKEL ---
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
@@ -185,23 +231,11 @@ export default function WriteArticlePage() {
 
         setIsPublishing(true);
 
-        // 🛠️ STRATEGI FORMAT MERGE: Menyusun struktur dokumen teks agar tercetak rapi secara berurutan
-        let finalMergedContent = "";
-        if (authors.trim()) finalMergedContent += `Disusun oleh:\n${authors.trim()}\n\n`;
-
-        if (abstract.trim()) {
-            finalMergedContent += `ABSTRAK\n${abstract.trim()}\n\n`;
-        }
-
+        let unifiedBodyContent = "";
         if (methodology.trim()) {
-            finalMergedContent += `METODE PENELITIAN\n${methodology.trim()}\n\n`;
+            unifiedBodyContent += `BAB II. METODE PENELITIAN\n${methodology.trim()}\n\nBAB III. PEMBAHASAN UTAMA\n`;
         }
-
-        finalMergedContent += `PEMBAHASAN UTAMA\n${mainContent.trim()}`;
-
-        if (dapus.trim()) {
-            finalMergedContent += `\n\nDAFTAR PUSTAKA\n${dapus.trim()}`;
-        }
+        unifiedBodyContent += mainContent.trim();
 
         try {
             const response = await fetch("/api/articles", {
@@ -209,7 +243,9 @@ export default function WriteArticlePage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     title: title.trim(),
-                    content: finalMergedContent,
+                    abstract: abstract.trim() || null,
+                    content: unifiedBodyContent,
+                    keywords: dapus.trim() || null,
                     coverImageUrl: coverUrl || null
                 }),
             });
@@ -233,10 +269,12 @@ export default function WriteArticlePage() {
         <div className="min-h-screen bg-emerald-50/40 p-4 md:p-8">
             <div className="max-w-3xl mx-auto bg-white rounded-3xl shadow-sm border border-emerald-900/10 p-6 md:p-8">
 
-                <Link href="/dashboard" className="inline-flex items-center gap-1 text-sm font-medium text-gray-500 hover:text-emerald-700 mb-6 transition-colors group cursor-pointer">
-                    <span className="transition-transform group-hover:-translate-x-1">←</span>
-                    <span>Kembali ke Dashboard</span>
-                </Link>
+                <div className="mb-6">
+                    <Link href="/dashboard" className="inline-flex items-center gap-1 text-sm font-medium text-gray-500 hover:text-emerald-700 transition-colors group cursor-pointer">
+                        <span className="transition-transform group-hover:-translate-x-1">←</span>
+                        <span>Kembali ke Dashboard</span>
+                    </Link>
+                </div>
 
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">✏️ Tulis Artikel Baru</h1>
                 <p className="text-gray-500 text-sm mb-8">impor file otomatis dengan integrasi AI sebagai pemisah struktur jurnal ilmiah atau ketik manual.</p>
@@ -316,7 +354,7 @@ export default function WriteArticlePage() {
                         />
                     </div>
 
-                    {/* 3. ABSTRAK (BARU) */}
+                    {/* 3. ABSTRAK */}
                     <div>
                         <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Abstrak / Abstract</label>
                         <textarea
@@ -329,7 +367,7 @@ export default function WriteArticlePage() {
                         />
                     </div>
 
-                    {/* 4. METODE PENELITIAN (BARU) */}
+                    {/* 4. METODE PENELITIAN */}
                     <div>
                         <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Metode Penelitian</label>
                         <textarea
@@ -342,20 +380,53 @@ export default function WriteArticlePage() {
                         />
                     </div>
 
-                    {/* 5. ISI UTAMA */}
+                    {/* 5. ISI UTAMA + TOOLBAR EDITING RICH TEXT */}
                     <div>
-                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                            Pembahasan Utama Artikel
-                            <span className="text-[10px] text-blue-600 font-bold lowercase normal-case bg-blue-50 px-2 py-0.5 rounded ml-2 border border-blue-100">💡 Bisa Langsung Paste (Ctrl+V) Gambar PDF</span>
-                        </label>
+                        <div className="flex items-center justify-between mb-1.5">
+                            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                Pembahasan Utama Artikel
+                            </label>
+                            <span className="text-[10px] text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded border border-blue-100">💡 Bisa Langsung Paste Gambar PDF</span>
+                        </div>
+
+                        {/* 🛠️ TOOLBAR FORMATTING BARU */}
+                        <div className="flex items-center gap-1 bg-gray-50 border border-b-0 border-gray-300 rounded-t-xl p-1.5">
+                            <button
+                                type="button"
+                                onClick={() => applyFormatting("bold")}
+                                className="px-3 py-1 text-sm font-bold text-gray-700 hover:bg-gray-200 rounded transition-all cursor-pointer"
+                                title="Tebal (Bold)"
+                            >
+                                B
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => applyFormatting("italic")}
+                                className="px-3 py-1 text-sm italic font-serif text-gray-700 hover:bg-gray-200 rounded transition-all cursor-pointer"
+                                title="Miring (Italic)"
+                            >
+                                I
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => applyFormatting("underline")}
+                                className="px-3 py-1 text-sm underline text-gray-700 hover:bg-gray-200 rounded transition-all cursor-pointer"
+                                title="Garis Bawah (Underline)"
+                            >
+                                U
+                            </button>
+                        </div>
+
+                        {/* TEXTAREA UTAMA */}
                         <textarea
+                            ref={mainContentRef} // Pasang ref di sini
                             rows={12}
                             value={mainContent}
                             disabled={isPublishing}
                             onPaste={handleContentPaste}
                             onChange={(e) => setMainContent(e.target.value)}
                             placeholder="Tuliskan isi pembahasan esai/jurnal utama di sini..."
-                            className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all text-base leading-relaxed"
+                            className="w-full px-4 py-3 rounded-b-xl border border-gray-300 text-gray-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all text-base leading-relaxed"
                         />
                     </div>
 
@@ -375,7 +446,7 @@ export default function WriteArticlePage() {
                     <button
                         type="submit"
                         disabled={isPublishing || loading || uploadingImage}
-                        className="w-full py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold rounded-xl transition-all shadow-sm shadow-emerald-700/10 hover:shadow-md cursor-pointer disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="w-full py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold rounded-xl transition-all shadow-sm shadow-emerald-700/10 hover:shadow-md cursor-pointer disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
                     >
                         {isPublishing ? "Memproses Publikasi..." : "Publish Artikel Resmi"}
                     </button>

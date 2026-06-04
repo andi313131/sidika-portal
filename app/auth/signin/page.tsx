@@ -23,7 +23,7 @@ export default function SignInPage() {
                         Portal Artikel UNSIL
                     </h1>
                     <p className="text-gray-500 text-sm">
-                        Login menggunakan akun Google Student UNSIL
+                        Login menggunakan akun Google atau Student UNSIL
                     </p>
                 </div>
 
@@ -38,10 +38,10 @@ export default function SignInPage() {
 
                 <div className="mt-8 pt-4 border-t border-gray-100">
                     <p className="text-xs text-gray-400 font-medium">
-                        Khusus Domain Resmi Universitas Siliwangi
+                        Publish Siliwangi Intelektual Digital Karya Artikel
                     </p>
                     <p className="text-xs font-mono text-emerald-600 font-bold mt-1">
-                        @student.unsil.ac.id
+                        @student.unsil.ac.id dan @gmail.com
                     </p>
                 </div>
             </div>
