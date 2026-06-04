@@ -26,21 +26,26 @@ export async function PUT(req: Request) {
             return NextResponse.json({ error: "Record user tidak ditemukan" }, { status: 404 });
         }
 
-        // 🔒 PROTEKSI BACKEND PERMANEN KETAT:
-        // Jika nama lengkap atau NIM sudah ada isinya, blokir upaya pengubahan!
-        if (targetUser.fullName && targetUser.fullName !== fullName) {
+        // 🔒 PROTEKSI BACKEND YANG SUDAH DIJINAKKAN:
+        // Sistem hanya mengunci kalau user sudah pernah sukses menyimpan data nama asli mereka sendiri 
+        // (Mendeteksi apakah nama lama mengandung format default Google '_Unsil' atau tidak)
+        const isDefaultGoogleName = targetUser.fullName?.includes("_Unsil");
+
+        if (targetUser.fullName && !isDefaultGoogleName && targetUser.fullName !== fullName) {
             return NextResponse.json({ error: "Nama Lengkap sudah dikunci permanen dan tidak dapat diubah!" }, { status: 400 });
         }
+
+        // NIM/NIP dikunci jika sudah terisi dan nilainya berbeda
         if (targetUser.nim && targetUser.nim !== identityNumber) {
             return NextResponse.json({ error: "NIM/NIP sudah dikunci permanen dan tidak dapat diubah!" }, { status: 400 });
         }
 
-        // Jalankan update untuk data yang boleh diubah (atau pengisian pertama kali)
+        // Eksekusi update data permanen
         const updatedUser = await prisma.user.update({
             where: { id: targetUser.id },
             data: {
-                fullName: targetUser.fullName ? undefined : (fullName?.trim() || null), // Isi cuma jika masih kosong
-                nim: targetUser.nim ? undefined : (identityNumber?.trim() || null),   // Isi cuma jika masih kosong
+                fullName: fullName?.trim() || null,
+                nim: identityNumber?.trim() || null,
                 faculty: faculty?.trim() || null,
                 studyProgram: studyProgram?.trim() || null,
                 role: userType === "Dosen" ? "lecturer" : "student"
