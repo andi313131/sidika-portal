@@ -129,12 +129,25 @@ export default function DashboardPage() {
                             {isAdmin ? "Sistem kurasi esai terintegrasi Universitas Siliwangi." : "Kelola dan lihat semua hasil publikasi karyamu di sini."}
                         </p>
                     </div>
-                    <Link
-                        href="/write"
-                        className="inline-flex items-center justify-center px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold rounded-xl transition-all shadow-sm shadow-emerald-700/10 cursor-pointer text-sm shrink-0"
-                    >
-                        ✏️ Tulis Artikel Baru
-                    </Link>
+
+                    {/* 🛠️ MODIFIKASI: Penambahan Flex Container agar Tombol Profil & Tulis Artikel Berdampingan */}
+                    <div className="flex items-center gap-3 shrink-0">
+                        {/* 👤 TOMBOL MENU PROFIL BARU */}
+                        <Link
+                            href="/dashboard/profile"
+                            className="inline-flex items-center justify-center px-5 py-2.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold rounded-xl transition-all shadow-sm cursor-pointer text-sm"
+                        >
+                            👤 Edit Profil
+                        </Link>
+
+                        {/* TOMBOL TULIS ARTIKEL (Bawaan lo) */}
+                        <Link
+                            href="/write"
+                            className="inline-flex items-center justify-center px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold rounded-xl transition-all shadow-sm shadow-emerald-700/10 cursor-pointer text-sm shrink-0"
+                        >
+                            ✏️ Tulis Artikel Baru
+                        </Link>
+                    </div>
                 </div>
 
                 {/* TAB NAVIGATION PANEL */}
@@ -142,13 +155,13 @@ export default function DashboardPage() {
                     <div className="flex border-b border-gray-200 mb-6 gap-2">
                         <button
                             onClick={() => setActiveTab("my-articles")}
-                            className={`px-4 py-2 text-sm font-semibold border-b-2 transition-all ${activeTab === "my-articles" ? "border-emerald-700 text-emerald-700" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+                            className={`px-4 py-2 text-sm font-semibold border-b-2 transition-all cursor-pointer ${activeTab === "my-articles" ? "border-emerald-700 text-emerald-700" : "border-transparent text-gray-500 hover:text-gray-700"}`}
                         >
                             📝 Tulisanku ({articles.length})
                         </button>
                         <button
                             onClick={() => setActiveTab("review-panel")}
-                            className={`px-4 py-2 text-sm font-semibold border-b-2 transition-all flex items-center gap-1.5 ${activeTab === "review-panel" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+                            className={`px-4 py-2 text-sm font-semibold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === "review-panel" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
                         >
                             <span>🔍 Antrean Review</span>
                             {pendingArticles.length > 0 && (
@@ -191,7 +204,6 @@ export default function DashboardPage() {
                                         <h3 className="font-bold text-gray-900 line-clamp-2 text-base mb-2">
                                             {article.title}
                                         </h3>
-                                        {/* 🛠️ FIX: Bungkus dengan getCleanPreview */}
                                         <p className="text-gray-500 text-xs line-clamp-4 leading-relaxed bg-slate-50 p-2.5 rounded-lg border border-slate-100 whitespace-pre-line">
                                             {getCleanPreview(article.content)}
                                         </p>
@@ -247,7 +259,6 @@ export default function DashboardPage() {
                                         <h3 className="font-bold text-gray-900 line-clamp-2 text-base mb-2">
                                             {article.title}
                                         </h3>
-                                        {/* 🛠️ FIX: Bungkus dengan getCleanPreview */}
                                         <p className="text-gray-500 text-xs line-clamp-4 leading-relaxed whitespace-pre-line">
                                             {getCleanPreview(article.content)}
                                         </p>
