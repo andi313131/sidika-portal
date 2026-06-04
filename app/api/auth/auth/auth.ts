@@ -3,7 +3,8 @@ import Google from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 
-const ALLOWED_DOMAIN = "student.unsil.ac.id";
+// 🛠️ PERUBAHAN 1: Ganti domain tunggal jadi array whitelist biar bisa muat banyak domain
+const ALLOWED_DOMAINS = ["student.unsil.ac.id", "gmail.com"];
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -21,7 +22,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async signIn({ user }) {
       const email = user.email ?? "";
-      if (!email.endsWith(`@${ALLOWED_DOMAIN}`)) {
+
+      // 🛠️ PERUBAHAN 2: Cek apakah email yang login berakhiran dengan salah satu isi array di atas
+      const isAllowed = ALLOWED_DOMAINS.some(domain => email.endsWith(`@${domain}`));
+
+      if (!isAllowed) {
         return `/auth/error?error=DomainNotAllowed&email=${encodeURIComponent(email)}`;
       }
       return true;
