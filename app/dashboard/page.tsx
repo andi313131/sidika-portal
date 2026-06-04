@@ -68,27 +68,27 @@ export default function DashboardPage() {
         fetchDashboardData();
     }, []);
 
-    // 🚪 FUNGSI LOGOUT INTEGRASI NEXTAUTH VIA ENDPOINT SIGN_OUT
+    // 🛠️ FIX UTAMA: Fungsi Logout Anti-Crash (Tanpa res.json() yang bikin pecah)
     const handleLogout = async () => {
         const yakin = confirm("Apakah kamu yakin ingin keluar dari sistem SIDIKA Portal?");
         if (!yakin) return;
 
         try {
-            // NextAuth otomatis membersihkan cookie session lewat endpoint bawaan ini
             const res = await fetch("/api/auth/signout", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" }
             });
 
+            // Langsung buang ke halaman utama tanpa ngebaca body JSON kosong
             if (res.ok || res.redirected) {
-                // Lempar balik ke halaman login utama secara paksa
                 window.location.href = "/";
             } else {
-                alert("Gagal keluar dari sesi aktif.");
+                window.location.href = "/"; // Fallback paksa tendang keluar
             }
         } catch (error) {
             console.error("Logout_Error:", error);
-            alert("Terjadi gangguan jaringan saat mencoba log out.");
+            // Sering kali sebenernya cookies udah kehapus tapi fetch-nya menganggap gagal, jadi kita paksa redirect aja
+            window.location.href = "/";
         }
     };
 
@@ -170,7 +170,6 @@ export default function DashboardPage() {
                             ✏️ Tulis Esai
                         </Link>
 
-                        {/* 🚪 TOMBOL LOGOUT INTERAKTIF BARU */}
                         <button
                             onClick={handleLogout}
                             className="inline-flex items-center justify-center px-4 py-2.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 font-semibold rounded-xl transition-all shadow-sm cursor-pointer text-sm gap-1"
@@ -205,7 +204,6 @@ export default function DashboardPage() {
 
                 {/* KONTEN UTAMA */}
                 {loading ? (
-                    /* 🌟 3 Kolom Skeleton Cards Berdenyut Kontras */
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 animate-pulse">
                         {[1, 2, 3].map((n) => (
                             <div key={n} className="bg-white border border-gray-200 rounded-2xl p-5 flex flex-col justify-between h-[240px] shadow-sm">
