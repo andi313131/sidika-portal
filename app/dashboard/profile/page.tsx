@@ -13,10 +13,13 @@ export default function ProfilePage() {
     const [faculty, setFaculty] = useState("");
     const [studyProgram, setStudyProgram] = useState("");
 
+    // State Lock Pengunci Data Bawaan DB
+    const [hasSavedName, setHasSavedName] = useState(false);
+    const [hasSavedIdentity, setHasSavedIdentity] = useState(false);
+
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
 
-    // Ambil data permanen dari database saat pertama kali halaman dibuka
     useEffect(() => {
         const fetchUserData = async () => {
             try {
@@ -29,6 +32,10 @@ export default function ProfilePage() {
                         setFaculty(userData.faculty || "");
                         setStudyProgram(userData.studyProgram || "");
                         setUserType(userData.role === "lecturer" ? "Dosen" : "Mahasiswa");
+
+                        // Kunci field jika sudah terisi di database
+                        if (userData.fullName) setHasSavedName(true);
+                        if (userData.nim) setHasSavedIdentity(true);
                     }
                 }
             } catch (err) {
@@ -42,8 +49,12 @@ export default function ProfilePage() {
 
     const handleSaveProfile = async (e: FormEvent) => {
         e.preventDefault();
-        setIsSaving(true);
 
+        // Peringatan konfirmasi akhir sebelum submit permanen
+        const confirmSave = confirm("⚠️ PERINGATAN: Nama Lengkap dan NIM/NIP yang lo masukkan akan DIKUNCI PERMANEN di database dan tidak akan bisa diubah lagi. Apakah data sudah benar?");
+        if (!confirmSave) return;
+
+        setIsSaving(true);
         try {
             const res = await fetch("/api/user/profile", {
                 method: "PUT",
@@ -54,7 +65,9 @@ export default function ProfilePage() {
             const data = await res.json();
 
             if (res.ok) {
-                alert("🔒 Sukses! Data profil permanen kamu berhasil dikunci ke sistem.");
+                alert("🔒 Sukses! Data identitas permanen lo resmi dikunci ke sistem.");
+                setHasSavedName(true);
+                setHasSavedIdentity(true);
                 router.refresh();
             } else {
                 alert(`❌ Gagal: ${data.error || "Terjadi kesalahan"}`);
@@ -80,7 +93,33 @@ export default function ProfilePage() {
             <div className="max-w-2xl mx-auto bg-white rounded-3xl shadow-sm border border-gray-200 p-6 md:p-8">
 
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">👤 Pengaturan Profil Akun</h1>
-                <p className="text-gray-500 text-sm mb-8">Isi data diri lo dengan benar untuk keperluan penguncian identitas publikasi ilmiah resmi.</p>
+                <p className="text-gray-500 text-sm mb-6">Isi data diri lo dengan benar untuk keperluan penguncian identitas publikasi ilmiah resmi.</p>
+
+                {/* ⚠️ BANNER PERINGATAN STRATEGIS */}
+                {(!hasSavedName || !hasSavedIdentity) ? (
+                    <div className="bg-amber-50 border border-amber-300 rounded-2xl p-4 text-xs text-amber-900 mb-6 flex items-start gap-3">
+                        <span className="text-base">⚠️</span>
+                        <div>
+                            <p className="font-bold uppercase tracking-wider mb-0.5">Peringatan Penguncian Data Identitas</p>
+                            <p className="leading-relaxed text-amber-800">
+                                Demi keaslian sitasi karya ilmiah UNSIL Portal, demi menghindari pemalsuan akun,
+                                <strong> Nama Lengkap</strong> dan <strong>Nomor Induk (NIM/NIP)</strong> hanya bisa diisi
+                                <span className="underline font-bold mx-1">SATU KALI saja</span>.
+                                Setelah lo menekan tombol simpan, kolom input tersebut akan otomatis dikunci permanen oleh database sistem.
+                            </p>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-xs text-emerald-900 mb-6 flex items-start gap-3">
+                        <span className="text-base">🔒</span>
+                        <div>
+                            <p className="font-bold uppercase tracking-wider mb-0.5">Identitas Terverifikasi & Dikunci</p>
+                            <p className="leading-relaxed text-emerald-700">
+                                Akun lo sudah terikat secara legal dengan database kampus Universitas Siliwangi. Nama Lengkap dan NIM/NIP tidak dapat diubah kembali untuk menjaga validitas hak cipta esai.
+                            </p>
+                        </div>
+                    </div>
+                )}
 
                 <form onSubmit={handleSaveProfile} className="space-y-6">
 
@@ -90,15 +129,17 @@ export default function ProfilePage() {
                         <div className="grid grid-cols-2 gap-4">
                             <button
                                 type="button"
+                                disabled={hasSavedIdentity}
                                 onClick={() => setUserType("Mahasiswa")}
-                                className={`py-3 rounded-xl border font-semibold text-sm transition-all cursor-pointer ${userType === "Mahasiswa" ? "bg-emerald-50 border-emerald-600 text-emerald-800 ring-2 ring-emerald-600/10" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"}`}
+                                className={`py-3 rounded-xl border font-semibold text-sm transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${userType === "Mahasiswa" ? "bg-emerald-50 border-emerald-600 text-emerald-800 ring-2 ring-emerald-600/10" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"}`}
                             >
                                 👨‍🎓 Mahasiswa
                             </button>
                             <button
                                 type="button"
+                                disabled={hasSavedIdentity}
                                 onClick={() => setUserType("Dosen")}
-                                className={`py-3 rounded-xl border font-semibold text-sm transition-all cursor-pointer ${userType === "Dosen" ? "bg-emerald-50 border-emerald-600 text-emerald-800 ring-2 ring-emerald-600/10" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"}`}
+                                className={`py-3 rounded-xl border font-semibold text-sm transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${userType === "Dosen" ? "bg-emerald-50 border-emerald-600 text-emerald-800 ring-2 ring-emerald-600/10" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"}`}
                             >
                                 👨‍🏫 Dosen / Staf Pengajar
                             </button>
@@ -111,9 +152,10 @@ export default function ProfilePage() {
                         <input
                             type="text"
                             value={fullName}
+                            disabled={hasSavedName} // Otomatis mengunci jika sudah tersimpan
                             onChange={(e) => setFullName(e.target.value)}
                             placeholder="Masukkan nama lengkap lo..."
-                            className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all text-sm font-medium"
+                            className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all text-sm font-medium disabled:bg-gray-100 disabled:text-gray-500 disabled:border-gray-200"
                         />
                     </div>
 
@@ -125,9 +167,10 @@ export default function ProfilePage() {
                         <input
                             type="text"
                             value={identityNumber}
+                            disabled={hasSavedIdentity} // Otomatis mengunci jika sudah tersimpan
                             onChange={(e) => setIdentityNumber(e.target.value)}
                             placeholder={userType === "Mahasiswa" ? "Contoh: 243403001" : "Contoh: 0412038901"}
-                            className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all text-sm"
+                            className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all text-sm disabled:bg-gray-100 disabled:text-gray-500 disabled:border-gray-200"
                         />
                     </div>
 
@@ -156,13 +199,15 @@ export default function ProfilePage() {
                     </div>
 
                     {/* BUTTON SUBMIT PERMANEN */}
-                    <button
-                        type="submit"
-                        disabled={isSaving}
-                        className="w-full py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl transition-all shadow-sm shadow-emerald-700/10 hover:shadow-md cursor-pointer disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center text-sm"
-                    >
-                        {isSaving ? "⏳ Mengunci Identitas Akun..." : "Simpan Pembaruan Profil"}
-                    </button>
+                    {(!hasSavedName || !hasSavedIdentity) && (
+                        <button
+                            type="submit"
+                            disabled={isSaving}
+                            className="w-full py-3.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl transition-all shadow-sm cursor-pointer disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center text-sm"
+                        >
+                            {isSaving ? "⏳ Mengunci Identitas Akun..." : "Kunci & Simpan Profil Permanen"}
+                        </button>
+                    )}
                 </form>
 
             </div>
