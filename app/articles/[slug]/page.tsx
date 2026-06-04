@@ -104,7 +104,13 @@ export default async function ArticleDetailPage({ params }: PageProps) {
                 <div className="flex items-center gap-2">
                     <span className="font-bold text-emerald-800">UNSIL Portal</span>
                     <span>•</span>
-                    <span>Diterbitkan oleh: <strong>{article.author?.name || "Mahasiswa"}</strong></span>
+                    {/* 🛠️ FIX UTAMA: Panggil 'fullName' atau 'studyProgram' yang ada isinya dari database lo */}
+                    <span>
+                        Diterbitkan oleh: <strong>
+                            {(article.author as any)?.fullName || (article.author as any)?.name || "Mahasiswa"}
+                        </strong>
+                        {(article.author as any)?.studyProgram && ` (${(article.author as any).studyProgram})`}
+                    </span>
                 </div>
                 <Link href="/dashboard" className="text-blue-600 hover:underline font-medium">
                     ← Kembali ke Dashboard
@@ -138,7 +144,7 @@ export default async function ArticleDetailPage({ params }: PageProps) {
                 {/* KOLOM KANAN: KONTEN ARTIKEL UTAMA */}
                 <main className="flex-1 max-w-4xl border-l border-gray-200/60 md:pl-8">
 
-                    {/* FOTO COVER UTAMA ESAL (Mejeng Gagah di Paling Atas) */}
+                    {/* FOTO COVER UTAMA ESAL */}
                     {article.coverImageUrl && (
                         <div className="w-full max-h-[380px] overflow-hidden rounded-2xl mb-6 bg-slate-50 border border-gray-200 shadow-sm shadow-slate-100">
                             <img
