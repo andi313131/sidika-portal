@@ -26,14 +26,15 @@ export default function DashboardPage() {
     // 🛡️ FUNGSI SAKTI: Bersihkan string Base64 panjang agar kartu dashboard tidak freeze & rusak
     const getCleanPreview = (text: string) => {
         if (!text) return "";
-        // Regex untuk menangkap pola string base64 gambar
         const base64Regex = /data:image\/[a-zA-Z]+;base64,[^ \n\r\t]+/g;
-        // Ganti teks base64 yang sepanjang jutaan karakter dengan penanda ringkas
         return text.replace(base64Regex, "[📸 Gambar/Grafik Terlampir]");
     };
 
     const fetchDashboardData = async () => {
         try {
+            // 💡 FIX 1: Reset paksa hak admin ke false di awal fetch agar tidak ada sisa state akun lama
+            setIsAdmin(false);
+
             const res = await fetch("/api/articles");
             if (res.ok) {
                 const data = await res.json();
@@ -46,7 +47,8 @@ export default function DashboardPage() {
                 const currentEmail = sessionData?.user?.email?.toLowerCase() || "";
                 const adminEmail = "253403111123@student.unsil.ac.id";
 
-                if (currentEmail === adminEmail.toLowerCase()) {
+                // 💡 FIX 2: Kunci logika admin dengan kondisi sebaliknya (else)
+                if (currentEmail && currentEmail === adminEmail.toLowerCase()) {
                     setIsAdmin(true);
 
                     const publicRes = await fetch("/api/public-articles");
@@ -55,10 +57,13 @@ export default function DashboardPage() {
                         const pendingData = allArticles.filter(art => art.status === "PENDING");
                         setPendingArticles(pendingData);
                     }
+                } else {
+                    setIsAdmin(false); // Pastikan user biasa mutlak mendapatkan false
                 }
             }
         } catch (err) {
             console.error("Gagal membuat data dashboard", err);
+            setIsAdmin(false);
         } finally {
             setLoading(false);
         }
@@ -68,7 +73,6 @@ export default function DashboardPage() {
         fetchDashboardData();
     }, []);
 
-    // 🛠️ FIX PRESISI: Mengalihkan user secara mutlak ke halaman resmi /auth/signin setelah logout
     const handleLogout = async () => {
         const yakin = confirm("Apakah kamu yakin ingin keluar dari sistem SIDIKA Portal?");
         if (!yakin) return;
@@ -79,7 +83,6 @@ export default function DashboardPage() {
                 headers: { "Content-Type": "application/json" }
             });
 
-            // Begitu cookies terhapus, paksa tendang user ke halaman /auth/signin
             if (res.ok || res.redirected) {
                 window.location.href = "/auth/signin";
             } else {
@@ -146,7 +149,7 @@ export default function DashboardPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
                     <div>
                         <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-                            {isAdmin ? "👑 Ruang Kendali Editor" : " Dashboard Artikel"}
+                            {isAdmin ? "👑 Ruang Kendali Editor" : "📚 Dashboard Artikel"}
                         </h1>
                         <p className="text-gray-500 text-sm mt-1">
                             {isAdmin ? "Sistem kurasi esai terintegrasi Universitas Siliwangi." : "Kelola dan lihat semua hasil publikasi karyamu di sini."}
@@ -159,21 +162,21 @@ export default function DashboardPage() {
                             href="/dashboard/profile"
                             className="inline-flex items-center justify-center px-4 py-2.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold rounded-xl transition-all shadow-sm cursor-pointer text-sm gap-1"
                         >
-                            Profil
+                            👤 Profil
                         </Link>
 
                         <Link
                             href="/write"
                             className="inline-flex items-center justify-center px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold rounded-xl transition-all shadow-sm shadow-emerald-700/10 cursor-pointer text-sm shrink-0 gap-1"
                         >
-                            Tulis Karya
+                            ✏️ Tulis Karya
                         </Link>
 
                         <button
                             onClick={handleLogout}
                             className="inline-flex items-center justify-center px-4 py-2.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 font-semibold rounded-xl transition-all shadow-sm cursor-pointer text-sm gap-1"
                         >
-                            Keluar
+                            🚪 Keluar
                         </button>
                     </div>
                 </div>
@@ -228,7 +231,7 @@ export default function DashboardPage() {
                             </div>
                         ))}
                     </div>
-                ) : activeTab === "review-panel" ? (
+                ) : isAdmin && activeTab === "review-panel" ? (
                     /* --- 1. TAMPILAN GUDANG REVIEW ADMIN --- */
                     pendingArticles.length === 0 ? (
                         <div className="text-center bg-white border border-gray-200 rounded-2xl p-12 shadow-sm">
