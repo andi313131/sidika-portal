@@ -7,18 +7,17 @@ const ALLOWED_DOMAINS = ["student.unsil.ac.id", "gmail.com"];
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt" }, // Paksa strategi JWT agar ID user sinkron di NextAuth v5
+  session: { strategy: "jwt" }, // Paksa strategi JWT agar token ID sinkron di NextAuth v5
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      allowDangerousEmailAccountLinking: true, // Amankan tautan akun jika data email duplikat
 
-      // 🛠️ BARIS SAKTI UTAMA: Otomatis mengawinkan akun biar gak kena OAuthAccountNotLinked
-      allowDangerousEmailAccountLinking: true,
-
+      // 💡 FIX UTAMA: Tulis parameter authorization secara lengkap agar Google terpaksa memunculkan pop-up akun!
       authorization: {
         params: {
-          prompt: "select_account",
+          prompt: "select_account consent", // ← Tambahkan kata 'consent' agar Google bener-bener nanya ulang
           access_type: "offline",
           response_type: "code"
         },
@@ -27,9 +26,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async signIn({ user }) {
-      const email = user.email ?? "";
+      // Paksa email menjadi huruf kecil semua biar tidak sensitif huruf besar-kecil
+      const email = (user.email ?? "").toLowerCase();
 
-      // Cek apakah email yang login berakhiran dengan salah satu isi array whitelist
       const isAllowed = ALLOWED_DOMAINS.some(domain => email.endsWith(`@${domain}`));
 
       if (!isAllowed) {
@@ -37,16 +36,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return true;
     },
-    // Oper ID dari akun database lewat JWT Token baru ke Session
+    // Overwrite data token di browser menggunakan data user baru yang aktif login
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.email = user.email?.toLowerCase(); // Simpan email dalam bentuk lowercase di token
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user && token.id) {
-        session.user.id = token.id as string; // ID nempel aman ke session dashboard lo
+        session.user.id = token.id as string;
+        session.user.email = token.email as string; // Pastikan email di session ter-update presisi
       }
       return session;
     },
