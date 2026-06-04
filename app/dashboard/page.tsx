@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { signOut } from "next-auth/react"; // 💡 FIX LOGOUT 1: Import fungsi resmi NextAuth
 
 interface Article {
     id: string;
@@ -32,7 +33,6 @@ export default function DashboardPage() {
 
     const fetchDashboardData = async () => {
         try {
-            // 💡 FIX 1: Reset paksa hak admin ke false di awal fetch agar tidak ada sisa state akun lama
             setIsAdmin(false);
 
             const res = await fetch("/api/articles");
@@ -47,7 +47,6 @@ export default function DashboardPage() {
                 const currentEmail = sessionData?.user?.email?.toLowerCase() || "";
                 const adminEmail = "253403111123@student.unsil.ac.id";
 
-                // 💡 FIX 2: Kunci logika admin dengan kondisi sebaliknya (else)
                 if (currentEmail && currentEmail === adminEmail.toLowerCase()) {
                     setIsAdmin(true);
 
@@ -58,7 +57,7 @@ export default function DashboardPage() {
                         setPendingArticles(pendingData);
                     }
                 } else {
-                    setIsAdmin(false); // Pastikan user biasa mutlak mendapatkan false
+                    setIsAdmin(false);
                 }
             }
         } catch (err) {
@@ -73,21 +72,16 @@ export default function DashboardPage() {
         fetchDashboardData();
     }, []);
 
+    // 💡 FIX LOGOUT 2: Ganti fetch manual dengan eksekusi signOut() NextAuth
     const handleLogout = async () => {
         const yakin = confirm("Apakah kamu yakin ingin keluar dari sistem SIDIKA Portal?");
         if (!yakin) return;
 
         try {
-            const res = await fetch("/api/auth/signout", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" }
+            await signOut({
+                callbackUrl: "/auth/signin",
+                redirect: true
             });
-
-            if (res.ok || res.redirected) {
-                window.location.href = "/auth/signin";
-            } else {
-                window.location.href = "/auth/signin";
-            }
         } catch (error) {
             console.error("Logout_Error:", error);
             window.location.href = "/auth/signin";
