@@ -68,7 +68,7 @@ export default function DashboardPage() {
         fetchDashboardData();
     }, []);
 
-    // 🛠️ FIX UTAMA: Logout melempar balik user secara presisi ke halaman /signin
+    // 🛠️ FIX PRESISI: Mengalihkan user secara mutlak ke halaman resmi /auth/signin setelah logout
     const handleLogout = async () => {
         const yakin = confirm("Apakah kamu yakin ingin keluar dari sistem SIDIKA Portal?");
         if (!yakin) return;
@@ -79,15 +79,15 @@ export default function DashboardPage() {
                 headers: { "Content-Type": "application/json" }
             });
 
-            // Sukses atau dialihkan, paksa bersihkan session dan lempar ke /signin
+            // Begitu cookies terhapus, paksa tendang user ke halaman /auth/signin
             if (res.ok || res.redirected) {
-                window.location.href = "/signin";
+                window.location.href = "/auth/signin";
             } else {
-                window.location.href = "/signin";
+                window.location.href = "/auth/signin";
             }
         } catch (error) {
             console.error("Logout_Error:", error);
-            window.location.href = "/signin";
+            window.location.href = "/auth/signin";
         }
     };
 
@@ -146,7 +146,7 @@ export default function DashboardPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
                     <div>
                         <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-                            {isAdmin ? " Ruang Kendali Editor" : " Dashboard Artikel"}
+                            {isAdmin ? "👑 Ruang Kendali Editor" : " Dashboard Artikel"}
                         </h1>
                         <p className="text-gray-500 text-sm mt-1">
                             {isAdmin ? "Sistem kurasi esai terintegrasi Universitas Siliwangi." : "Kelola dan lihat semua hasil publikasi karyamu di sini."}
@@ -159,14 +159,14 @@ export default function DashboardPage() {
                             href="/dashboard/profile"
                             className="inline-flex items-center justify-center px-4 py-2.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold rounded-xl transition-all shadow-sm cursor-pointer text-sm gap-1"
                         >
-                            Edit Profil
+                            Profil
                         </Link>
 
                         <Link
                             href="/write"
                             className="inline-flex items-center justify-center px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold rounded-xl transition-all shadow-sm shadow-emerald-700/10 cursor-pointer text-sm shrink-0 gap-1"
                         >
-                            Buat Karya
+                            Tulis Karya
                         </Link>
 
                         <button
