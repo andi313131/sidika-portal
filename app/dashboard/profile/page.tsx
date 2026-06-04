@@ -6,44 +6,40 @@ import { useRouter } from "next/navigation";
 export default function ProfilePage() {
     const router = useRouter();
 
-    // State Input Form Profil
-    const [name, setName] = useState<string>("");
-    const [email, setEmail] = useState<string>("");
-    const [nim, setNim] = useState<string>("");
-    const [faculty, setFaculty] = useState<string>("");
-    const [major, setMajor] = useState<string>("");
-    const [bio, setBio] = useState<string>("");
+    // State Form
+    const [userType, setUserType] = useState<"Mahasiswa" | "Dosen">("Mahasiswa");
+    const [fullName, setFullName] = useState("");
+    const [identityNumber, setIdentityNumber] = useState("");
+    const [faculty, setFaculty] = useState("");
+    const [studyProgram, setStudyProgram] = useState("");
 
-    const [loading, setLoading] = useState<boolean>(true);
-    const [isSaving, setIsSaving] = useState<boolean>(false);
+    const [loading, setLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
 
-    // 🛠️ FIX TOTAL: Ambil data mendalam langsung dari API profile database
+    // Ambil data permanen dari database saat pertama kali halaman dibuka
     useEffect(() => {
         const fetchUserData = async () => {
             try {
-                const res = await fetch("/api/user/profile"); // 👈 Diubah kesini biar dapet data NIM, Jurusan, dll
+                const res = await fetch("/api/user/profile");
                 if (res.ok) {
                     const userData = await res.json();
                     if (userData) {
-                        setName(userData.name || "");
-                        setEmail(userData.email || "");
-                        setNim(userData.nim || "");
+                        setFullName(userData.fullName || "");
+                        setIdentityNumber(userData.nim || "");
                         setFaculty(userData.faculty || "");
-                        setMajor(userData.major || "");
-                        setBio(userData.bio || "");
+                        setStudyProgram(userData.studyProgram || "");
+                        setUserType(userData.role === "lecturer" ? "Dosen" : "Mahasiswa");
                     }
                 }
             } catch (err) {
-                console.error("Gagal memuat data user dari database", err);
+                console.error("Gagal memuat data profil", err);
             } finally {
                 setLoading(false);
             }
         };
-
         fetchUserData();
     }, []);
 
-    // 2. Fungsi Kirim Data Update ke API Backend
     const handleSaveProfile = async (e: FormEvent) => {
         e.preventDefault();
         setIsSaving(true);
@@ -52,18 +48,20 @@ export default function ProfilePage() {
             const res = await fetch("/api/user/profile", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, nim, faculty, major, bio }),
+                body: JSON.stringify({ fullName, identityNumber, userType, faculty, studyProgram }),
             });
 
+            const data = await res.json();
+
             if (res.ok) {
-                alert("🎉 Sukses! Data profil kamu berhasil diperbarui.");
+                alert("🔒 Sukses! Data profil permanen kamu berhasil dikunci ke sistem.");
                 router.refresh();
             } else {
-                alert("Gagal memperbarui data profil.");
+                alert(`❌ Gagal: ${data.error || "Terjadi kesalahan"}`);
             }
         } catch (error) {
             console.error(error);
-            alert("Terjadi kesalahan jaringan.");
+            alert("💥 Terjadi kesalahan jaringan.");
         } finally {
             setIsSaving(false);
         }
@@ -72,55 +70,68 @@ export default function ProfilePage() {
     if (loading) {
         return (
             <div className="text-center py-12 text-gray-500 font-medium animate-pulse">
-                ⏳ Memuat biodata akademis...
+                ⏳ Memuat data identitas permanen...
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-emerald-50/40 p-4 md:p-8">
-            <div className="max-w-2xl mx-auto bg-white rounded-3xl shadow-sm border border-emerald-900/10 p-6 md:p-8">
+        <div className="min-h-screen bg-gray-50/40 p-4 md:p-8">
+            <div className="max-w-2xl mx-auto bg-white rounded-3xl shadow-sm border border-gray-200 p-6 md:p-8">
 
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">👤 Pengaturan Profil</h1>
-                <p className="text-gray-500 text-sm mb-8">Kelola informasi data diri dan identitas akademis lo untuk keperluan publikasi esai ilmiah.</p>
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">👤 Pengaturan Profil Akun</h1>
+                <p className="text-gray-500 text-sm mb-8">Isi data diri lo dengan benar untuk keperluan penguncian identitas publikasi ilmiah resmi.</p>
 
-                <form onSubmit={handleSaveProfile} className="space-y-5">
-                    {/* Email Box */}
+                <form onSubmit={handleSaveProfile} className="space-y-6">
+
+                    {/* PILIHAN STATUS KEANGGOTAAN KAMPUS */}
                     <div>
-                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Alamat Email (Akun Google)</label>
-                        <input
-                            type="email"
-                            value={email}
-                            disabled
-                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed font-medium text-sm"
-                        />
+                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Status Keanggotaan Kampus</label>
+                        <div className="grid grid-cols-2 gap-4">
+                            <button
+                                type="button"
+                                onClick={() => setUserType("Mahasiswa")}
+                                className={`py-3 rounded-xl border font-semibold text-sm transition-all cursor-pointer ${userType === "Mahasiswa" ? "bg-emerald-50 border-emerald-600 text-emerald-800 ring-2 ring-emerald-600/10" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"}`}
+                            >
+                                👨‍🎓 Mahasiswa
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setUserType("Dosen")}
+                                className={`py-3 rounded-xl border font-semibold text-sm transition-all cursor-pointer ${userType === "Dosen" ? "bg-emerald-50 border-emerald-600 text-emerald-800 ring-2 ring-emerald-600/10" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"}`}
+                            >
+                                👨‍🏫 Dosen / Staf Pengajar
+                            </button>
+                        </div>
                     </div>
 
-                    {/* Nama Lengkap */}
+                    {/* NAMA LENGKAP */}
                     <div>
                         <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Nama Lengkap</label>
                         <input
                             type="text"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
+                            value={fullName}
+                            onChange={(e) => setFullName(e.target.value)}
                             placeholder="Masukkan nama lengkap lo..."
-                            className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all font-medium text-sm"
+                            className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all text-sm font-medium"
                         />
                     </div>
 
-                    {/* NIM */}
+                    {/* NOMOR INDUK (DINAMIS SESUAI STATUS) */}
                     <div>
-                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Nomor Induk Mahasiswa (NIM)</label>
+                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                            {userType === "Mahasiswa" ? "Nomor Induk Mahasiswa (NIM)" : "Nomor Induk Dosen / Pegawai (NIDN/NIP)"}
+                        </label>
                         <input
                             type="text"
-                            value={nim}
-                            onChange={(e) => setNim(e.target.value)}
-                            placeholder="Contoh: 243403001"
+                            value={identityNumber}
+                            onChange={(e) => setIdentityNumber(e.target.value)}
+                            placeholder={userType === "Mahasiswa" ? "Contoh: 243403001" : "Contoh: 0412038901"}
                             className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all text-sm"
                         />
                     </div>
 
-                    {/* Grid Fakultas & Jurusan */}
+                    {/* GRID FAKULTAS & JURUSAN */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Fakultas</label>
@@ -136,33 +147,21 @@ export default function ProfilePage() {
                             <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Program Studi / Jurusan</label>
                             <input
                                 type="text"
-                                value={major}
-                                onChange={(e) => setMajor(e.target.value)}
+                                value={studyProgram}
+                                onChange={(e) => setStudyProgram(e.target.value)}
                                 placeholder="Misal: Akuntansi"
                                 className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all text-sm"
                             />
                         </div>
                     </div>
 
-                    {/* Bio Singkat */}
-                    <div>
-                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Bio Singkat / Afiliasi Riset</label>
-                        <textarea
-                            rows={4}
-                            value={bio}
-                            onChange={(e) => setBio(e.target.value)}
-                            placeholder="Ceritakan ketertarikan riset ilmiah lo, misal: Fokus pada riset pasar modal Indonesia, akuntansi keuangan, atau makroekonomi..."
-                            className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all text-sm leading-relaxed"
-                        />
-                    </div>
-
-                    {/* Button Submit */}
+                    {/* BUTTON SUBMIT PERMANEN */}
                     <button
                         type="submit"
                         disabled={isSaving}
-                        className="w-full py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold rounded-xl transition-all shadow-sm shadow-emerald-700/10 hover:shadow-md cursor-pointer disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center text-sm"
+                        className="w-full py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl transition-all shadow-sm shadow-emerald-700/10 hover:shadow-md cursor-pointer disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center text-sm"
                     >
-                        {isSaving ? "⏳ Menyimpan Perubahan..." : "Simpan Pembaruan Profil"}
+                        {isSaving ? "⏳ Mengunci Identitas Akun..." : "Simpan Pembaruan Profil"}
                     </button>
                 </form>
 
