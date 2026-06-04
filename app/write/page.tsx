@@ -7,9 +7,11 @@ import { useRouter } from "next/navigation";
 export default function WriteArticlePage() {
     const router = useRouter();
 
-    // State Form Terpisah
+    // 🛠️ MODIFIKASI: State Form Terpisah Sesuai Standar Jurnal Ilmiah
     const [title, setTitle] = useState<string>("");
     const [authors, setAuthors] = useState<string>("");
+    const [abstract, setAbstract] = useState<string>("");
+    const [methodology, setMethodology] = useState<string>("");
     const [mainContent, setMainContent] = useState<string>("");
     const [dapus, setDapus] = useState<string>("");
 
@@ -35,8 +37,6 @@ export default function WriteArticlePage() {
 
             if (res.ok) {
                 const data = await res.json();
-
-                // 🛠️ FIX: Ganti data.url menjadi data.imageUrl sesuai respon API Base64 kita
                 const secureUrl = data.imageUrl || data.url;
 
                 if (isCover) {
@@ -65,13 +65,11 @@ export default function WriteArticlePage() {
 
         for (let i = 0; i < items.length; i++) {
             if (items[i].type.indexOf("image") !== -1) {
-                // Cegah aksi paste teks default agar tidak nge-blank/dobel
                 e.preventDefault();
 
                 const file = items[i].getAsFile();
                 if (!file) continue;
 
-                // Tampilkan indikator loading sementara di posisi kursor
                 const targetTextarea = e.currentTarget;
                 const selectionStart = targetTextarea.selectionStart;
                 const selectionEnd = targetTextarea.selectionEnd;
@@ -79,15 +77,12 @@ export default function WriteArticlePage() {
                 const textSebelumnya = mainContent.substring(0, selectionStart);
                 const textSesudahnya = mainContent.substring(selectionEnd);
 
-                // Jalankan proses upload background via API upload Base64 kita
                 const uploadedUrl = await handleImageUpload(file, false);
 
                 if (uploadedUrl) {
-                    // Masukkan string Base64 gambar otomatis di sela-sela teks paragraf lo
                     const templateGambar = `\n\n${uploadedUrl}\n\n`;
                     setMainContent(textSebelumnya + templateGambar + textSesudahnya);
 
-                    // Posisikan kursor tepat setelah link gambar yang di-paste tadi
                     setTimeout(() => {
                         targetTextarea.focus();
                         const newCursorPos = selectionStart + templateGambar.length;
@@ -99,7 +94,7 @@ export default function WriteArticlePage() {
         }
     };
 
-    // --- FUNGSI IMPOR FILE (.DOCX / .PDF) BIASA ---
+    // --- FUNGSI IMPOR FILE DENGAN PEMISAHAN SKEMA BARU VIA AI ---
     const handleFileImport = async (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -145,6 +140,9 @@ export default function WriteArticlePage() {
                 return;
             }
 
+            const base64CleanRegex = /data:image\/[a-zA-Z]+;base64,[^ \n\r\t]+/g;
+            extractedRawText = extractedRawText.replace(base64CleanRegex, "[📸 Gambar Terlampir]");
+
             setOcrProgress("🧠 AI sedang membedah struktur esai...");
 
             const aiRes = await fetch("/api/ai/split", {
@@ -157,10 +155,13 @@ export default function WriteArticlePage() {
                 const parsedResult = await aiRes.json();
                 setTitle(parsedResult.title || "");
                 setAuthors(parsedResult.authors || "");
+                // 🛠️ Hubungkan properti baru dari AI ke state form lo
+                setAbstract(parsedResult.abstract || "");
+                setMethodology(parsedResult.methodology || "");
                 setMainContent(parsedResult.content || "");
                 setDapus(parsedResult.references || "");
             } else {
-                alert("AI gagal memilah dokumen, teks mentah dimasukkan ke isi.");
+                alert("AI gagal memilah dokumen secara otomatis. Teks bersih dimasukkan langsung ke kolom isi.");
                 setMainContent(extractedRawText);
             }
 
@@ -173,7 +174,7 @@ export default function WriteArticlePage() {
         }
     };
 
-    // --- FUNGSI SUBMIT DATA ARTIKEL ---
+    // --- FUNGSI SUBMIT DATA ARTIKEL (FORMAT MERGE BARU) ---
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
@@ -184,10 +185,23 @@ export default function WriteArticlePage() {
 
         setIsPublishing(true);
 
+        // 🛠️ STRATEGI FORMAT MERGE: Menyusun struktur dokumen teks agar tercetak rapi secara berurutan
         let finalMergedContent = "";
-        if (authors.trim()) finalMergedContent += `Disusun oleh: ${authors.trim()}\n\n`;
-        finalMergedContent += `${mainContent.trim()}`;
-        if (dapus.trim()) finalMergedContent += `\n\nDAFTAR PUSTAKA\n${dapus.trim()}`;
+        if (authors.trim()) finalMergedContent += `Disusun oleh:\n${authors.trim()}\n\n`;
+
+        if (abstract.trim()) {
+            finalMergedContent += `ABSTRAK\n${abstract.trim()}\n\n`;
+        }
+
+        if (methodology.trim()) {
+            finalMergedContent += `METODE PENELITIAN\n${methodology.trim()}\n\n`;
+        }
+
+        finalMergedContent += `PEMBAHASAN UTAMA\n${mainContent.trim()}`;
+
+        if (dapus.trim()) {
+            finalMergedContent += `\n\nDAFTAR PUSTAKA\n${dapus.trim()}`;
+        }
 
         try {
             const response = await fetch("/api/articles", {
@@ -225,7 +239,7 @@ export default function WriteArticlePage() {
                 </Link>
 
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">✏️ Tulis Artikel Baru</h1>
-                <p className="text-gray-500 text-sm mb-8">impor file otomatis dengan integrasi AI sebagai pemisah atau ketik manual.</p>
+                <p className="text-gray-500 text-sm mb-8">impor file otomatis dengan integrasi AI sebagai pemisah struktur jurnal ilmiah atau ketik manual.</p>
 
                 {/* BOX IMPOR JURNAL */}
                 <div className="mb-8 p-5 bg-emerald-50/50 border border-dashed border-emerald-300 rounded-2xl">
@@ -233,7 +247,7 @@ export default function WriteArticlePage() {
                         Unggah Draft (.docx / .pdf)
                     </label>
                     <p className="text-xs text-emerald-700 mb-4">
-                        AI akan membaca dokumen secara utuh, lalu memilah judul, penulis, isi, dan dapus ke kolomnya masing-masing.
+                        AI akan membaca dokumen secara utuh, lalu memilah judul, penulis, abstrak, metode, pembahasan utama, dan daftar pustaka secara otomatis.
                     </p>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                         <input
@@ -276,6 +290,7 @@ export default function WriteArticlePage() {
                         )}
                     </div>
 
+                    {/* 1. JUDUL */}
                     <div>
                         <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Judul Artikel</label>
                         <input
@@ -288,6 +303,7 @@ export default function WriteArticlePage() {
                         />
                     </div>
 
+                    {/* 2. AUTHOR */}
                     <div>
                         <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Susunan Penulis / Author</label>
                         <input
@@ -300,9 +316,36 @@ export default function WriteArticlePage() {
                         />
                     </div>
 
+                    {/* 3. ABSTRAK (BARU) */}
+                    <div>
+                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Abstrak / Abstract</label>
+                        <textarea
+                            rows={4}
+                            value={abstract}
+                            disabled={isPublishing}
+                            onChange={(e) => setAbstract(e.target.value)}
+                            placeholder="Tuliskan ringkasan intisari artikel (Bahasa Indonesia / English)..."
+                            className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all text-sm leading-relaxed"
+                        />
+                    </div>
+
+                    {/* 4. METODE PENELITIAN (BARU) */}
+                    <div>
+                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Metode Penelitian</label>
+                        <textarea
+                            rows={4}
+                            value={methodology}
+                            disabled={isPublishing}
+                            onChange={(e) => setMethodology(e.target.value)}
+                            placeholder="Jelaskan pendekatan, jenis data, lokasi, dan metode analisis yang lo gunakan..."
+                            className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all text-sm leading-relaxed"
+                        />
+                    </div>
+
+                    {/* 5. ISI UTAMA */}
                     <div>
                         <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                            Isi Artikel Utama (Bab I - V)
+                            Pembahasan Utama Artikel
                             <span className="text-[10px] text-blue-600 font-bold lowercase normal-case bg-blue-50 px-2 py-0.5 rounded ml-2 border border-blue-100">💡 Bisa Langsung Paste (Ctrl+V) Gambar PDF</span>
                         </label>
                         <textarea
@@ -311,11 +354,12 @@ export default function WriteArticlePage() {
                             disabled={isPublishing}
                             onPaste={handleContentPaste}
                             onChange={(e) => setMainContent(e.target.value)}
-                            placeholder="Tuliskan isi esai... Taruh kursor di sini lalu tekan Ctrl + V jika ingin menyisipkan gambar hasil screenshot PDF secara instan!"
+                            placeholder="Tuliskan isi pembahasan esai/jurnal utama di sini..."
                             className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all text-base leading-relaxed"
                         />
                     </div>
 
+                    {/* 6. DAFTAR PUSTAKA */}
                     <div>
                         <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Daftar Pustaka / Rujukan</label>
                         <textarea

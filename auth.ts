@@ -1,40 +1,29 @@
+// auth.ts
 import NextAuth from "next-auth";
-import Google from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
-
-const ALLOWED_DOMAIN = "student.unsil.ac.id";
+import { authConfig } from "./auth.config";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      authorization: {
-        params: {
-          prompt: "select_account",
-        },
-      },
-    }),
-  ],
+  session: { strategy: "jwt" }, // WAJIB untuk arsitektur Middleware Next.js
+  ...authConfig,
   callbacks: {
-    async signIn({ user }) {
-      const email = user.email ?? "";
-      if (!email.endsWith(`@${ALLOWED_DOMAIN}`)) {
-        return `/auth/error?error=DomainNotAllowed&email=${encodeURIComponent(email)}`;
+    ...authConfig.callbacks, // Mengambil callback signIn dari auth.config.ts
+    
+    async jwt({ token, user }) {
+      // Saat pertama kali login, masukkan id user ke dalam token JWT
+      if (user) {
+        token.id = user.id;
       }
-      return true;
+      return token;
     },
-    async session({ session, user }) {
-      if (session.user) {
-        session.user.id = user.id;
+    async session({ session, token }) {
+      // Ambil id dari token JWT dan masukkan ke session objek browser
+      if (session.user && token.id) {
+        session.user.id = token.id as string;
       }
       return session;
     },
-  },
-  pages: {
-    signIn: "/auth/signin",
-    error: "/auth/error",
   },
 });
