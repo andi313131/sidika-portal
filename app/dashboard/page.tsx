@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { signOut } from "next-auth/react"; // 💡 FIX LOGOUT 1: Import fungsi resmi NextAuth
+import { signOut } from "next-auth/react"; // 💡 Import fungsi resmi NextAuth
 
 interface Article {
     id: string;
@@ -72,16 +72,23 @@ export default function DashboardPage() {
         fetchDashboardData();
     }, []);
 
-    // 💡 FIX LOGOUT 2: Ganti fetch manual dengan eksekusi signOut() NextAuth
+    // 🛠️ FIX LOGOUT AGRESIF: Hancurkan sisa token di cookie dan bersihkan cache router browser
     const handleLogout = async () => {
         const yakin = confirm("Apakah kamu yakin ingin keluar dari sistem SIDIKA Portal?");
         if (!yakin) return;
 
         try {
-            await signOut({
-                callbackUrl: "/auth/signin",
-                redirect: true
-            });
+            // 1. Panggil signOut bawaan dengan mematikan auto-redirect agar baris kode bawahnya bisa jalan dulu
+            await signOut({ redirect: false });
+
+            // 2. Taktik Pembersihan Paksa: Hapus manual semua variasi nama cookie session NextAuth
+            document.cookie = "authjs.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            document.cookie = "next-auth.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            document.cookie = "__Secure-authjs.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; secure;";
+            document.cookie = "__Secure-next-auth.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; secure;";
+
+            // 3. Gunakan hard redirection murni ke halaman masuk agar cache state Next.js rontok semua
+            window.location.href = "/auth/signin";
         } catch (error) {
             console.error("Logout_Error:", error);
             window.location.href = "/auth/signin";
