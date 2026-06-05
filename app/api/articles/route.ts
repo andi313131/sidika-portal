@@ -1,4 +1,3 @@
-// app/api/articles/route.ts
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { PrismaClient } from "@prisma/client";
@@ -15,8 +14,8 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Unauthorized", message: "Silakan login terlebih dahulu." }, { status: 401 });
         }
 
-        // 🔥 SINKRON GAMBER: Ikut tangkap coverImageUrl dari frontend (halaman /write)
-        const { title, content, coverImageUrl } = await req.json();
+        // 💡 FIX 1: Ambil data abstract dan keywords (Daftar Pustaka) yang dikirim dari halaman /write
+        const { title, content, coverImageUrl, abstract, keywords } = await req.json();
 
         if (!title || !content) {
             return NextResponse.json({ error: "Bad Request", message: "Judul dan konten tidak boleh kosong." }, { status: 400 });
@@ -34,14 +33,16 @@ export async function POST(req: Request) {
         // Membuat Slug unik menggunakan penanda waktu (Timestamp)
         const generatedSlug = `${title.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-")}-${Date.now()}`;
 
-        // Simpan langsung teks terstruktur murni ke dalam tabel MySQL lokal dengan status PENDING
+        // 💡 FIX 2: Masukkan kolom abstract dan keywords ke dalam struktur data penciptaan Prisma
         const newArticle = await prisma.article.create({
             data: {
                 title: title.trim(),
                 slug: generatedSlug,
-                content: content,      // Menyimpan teks gabungan (Author + Isi + Dapus)
-                coverImageUrl: coverImageUrl || null, // 🔥 SEKARANG MASUK DATABASE: Menyimpan string path /uploads/xxx.png
-                status: "PENDING",    // DIKUNCI DI SINI: Status awal pending, butuh approval Andika
+                content: content,                     // Menyimpan teks pembahasan utama
+                abstract: abstract ? abstract.trim() : null, // 🔥 SEKARANG MASUK DATABASE
+                keywords: keywords ? keywords.trim() : null, // 🔥 SEKARANG MASUK DATABASE (Daftar Pustaka)
+                coverImageUrl: coverImageUrl || null,  // Menyimpan string path gambar cover
+                status: "PENDING",                     // Status awal pending sebelum di-approve
                 authorId: dbUser.id,
             },
         });
@@ -57,7 +58,6 @@ export async function POST(req: Request) {
 export async function GET() {
     try {
         const session = await auth();
-        // 🔥 FIX FALLBACK: Samakan pakai email NIM penuh admin lo biar gak miss pas testing local
         let userEmail = "253403111123@student.unsil.ac.id";
 
         if (session?.user?.email) {
