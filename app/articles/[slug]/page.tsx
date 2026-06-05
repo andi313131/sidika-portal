@@ -44,6 +44,16 @@ export default async function ArticleDetailPage({ params }: PageProps) {
     const rawLines = article.content ? article.content.split("\n") : [];
     const tableOfContents: { id: string; text: string; isSub: boolean }[] = [];
 
+    // Fungsi bantu untuk membersihkan label kaku (BAB II, A., 1.) agar Daftar Isi & Judul sinkron bersih
+    const cleanHeadingText = (text: string) => {
+        return text
+            .replace(/^BAB\s+[IVXLCDM]+\.?\s*/i, "") // Buang "BAB II. " atau "BAB III "
+            .replace(/^[IVXLCDM]+\.\s+/i, "")        // Buang "II. "
+            .replace(/^[A-Z]\.\s+/i, "")             // Buang "A. " atau "B. "
+            .replace(/崩溃|^\d+\.\s+/g, "")          // Buang angka urut biasa "1. " atau "2. "
+            .trim();
+    };
+
     if (article.abstract) {
         tableOfContents.push({ id: "abstract-section", text: "Abstrak", isSub: false });
     }
@@ -57,11 +67,13 @@ export default async function ArticleDetailPage({ params }: PageProps) {
             /^[A-Z]\.\s+/i.test(trimmed) ||
             trimmed.toUpperCase().startsWith("BAB ")
         ) {
-            const id = trimmed.toLowerCase().replace(/[^a-z0-9]/g, "-");
-            tableOfContents.push({ id, text: trimmed, isSub: false });
+            const cleanText = cleanHeadingText(trimmed);
+            const id = cleanText.toLowerCase().replace(/[^a-z0-9]/g, "-");
+            tableOfContents.push({ id, text: cleanText, isSub: false });
         } else if (/^\d+\.\s+/g.test(trimmed) || trimmed.startsWith("Prinsip") || trimmed.endsWith(":")) {
-            const id = trimmed.toLowerCase().replace(/[^a-z0-9]/g, "-");
-            tableOfContents.push({ id, text: trimmed, isSub: true });
+            const cleanText = cleanHeadingText(trimmed);
+            const id = cleanText.toLowerCase().replace(/[^a-z0-9]/g, "-");
+            tableOfContents.push({ id, text: cleanText, isSub: true });
         }
     });
 
@@ -75,28 +87,33 @@ export default async function ArticleDetailPage({ params }: PageProps) {
             const trimmedLine = line.trim();
             if (!trimmedLine) return null;
 
+            // 1. Render Bab Utama (H2 ala Wikipedia) - BERSIH DARI ANGKA ROMAWI & BAB
             if (
                 /^[IVXLCDM]+\.\s+/i.test(trimmedLine) ||
                 /^[A-Z]\.\s+/i.test(trimmedLine) ||
                 trimmedLine.toUpperCase().startsWith("BAB ")
             ) {
-                const id = trimmedLine.toLowerCase().replace(/[^a-z0-9]/g, "-");
+                const cleanText = cleanHeadingText(trimmedLine);
+                const id = cleanText.toLowerCase().replace(/[^a-z0-9]/g, "-");
                 return (
-                    <h2 id={id} key={index} className="text-[22px] font-serif text-black mt-8 mb-3 border-b border-gray-300 pb-1 font-normal scroll-mt-6 tracking-tight">
-                        {trimmedLine}
+                    <h2 id={id} key={index} className="text-[22px] font-serif text-black mt-8 mb-3 border-b border-gray-300 pb-1 font-normal scroll-mt-6 tracking-tight uppercase">
+                        {cleanText}
                     </h2>
                 );
             }
 
+            // 2. Render Sub-Bab (H3) - BERSIH DARI ANGKA SUB-URUT
             if (/^\d+\.\s+/g.test(trimmedLine) || trimmedLine.startsWith("Prinsip") || trimmedLine.endsWith(":")) {
-                const id = trimmedLine.toLowerCase().replace(/[^a-z0-9]/g, "-");
+                const cleanText = cleanHeadingText(trimmedLine);
+                const id = cleanText.toLowerCase().replace(/[^a-z0-9]/g, "-");
                 return (
                     <h3 id={id} key={index} className="text-base font-sans font-bold text-gray-900 mt-5 mb-2 scroll-mt-6">
-                        {trimmedLine}
+                        {cleanText}
                     </h3>
                 );
             }
 
+            // 3. Render Gambar Ilustrasi / Paste
             if (trimmedLine.startsWith("http://") || trimmedLine.startsWith("https://") || trimmedLine.startsWith("/uploads/")) {
                 const cleanUrl = trimmedLine.split(" ")[0];
                 return (
@@ -109,6 +126,7 @@ export default async function ArticleDetailPage({ params }: PageProps) {
                 );
             }
 
+            // 4. Paragraf Utama (Mendukung Parsing Otomatis Bold, Italic, Underline)
             let parsedLine = trimmedLine
                 .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
                 .replace(/\*([^*]+)\*/g, "<em>$1</em>")
@@ -124,7 +142,7 @@ export default async function ArticleDetailPage({ params }: PageProps) {
         });
     };
 
-    // --- 🛠️ LOGIKA FIX DAFTAR PUSTAKA: ANGKA ANGKA DIHAPUS MUTLAK ---
+    // --- LOGIKA DAFTAR PUSTAKA ---
     const renderReferences = () => {
         if (!article.keywords) return null;
 
@@ -147,7 +165,6 @@ export default async function ArticleDetailPage({ params }: PageProps) {
             });
 
             return (
-                // 💡 FIX: Angka [{idx + 1}] dihapus, diganti list-disc (bullet point) atau teks murni rapi
                 <li key={idx} className="text-[14px] font-sans text-gray-800 leading-relaxed text-justify mb-3 list-none border-b border-gray-100 pb-2 last:border-0">
                     🔹 {formattedLine}
                 </li>
