@@ -11,15 +11,15 @@ interface PageProps {
 export default async function ArticleDetailPage({ params }: PageProps) {
     const { slug } = await params;
 
-    // 🛠️ FIX UTAMA: Panggil kolom abstract dan keywords secara eksplisit dari database
+    // 🛠️ Panggil kolom abstract dan keywords secara eksplisit dari database
     const article = await prisma.article.findUnique({
         where: { slug: slug },
         select: {
             id: true,
             title: true,
             content: true,
-            abstract: true,   // 🔥 Ditarik aman biar Abstrak muncul
-            keywords: true,   // 🔥 Ditarik aman biar Daftar Pustaka muncul
+            abstract: true,
+            keywords: true,
             coverImageUrl: true,
             createdAt: true,
             slug: true,
@@ -44,7 +44,6 @@ export default async function ArticleDetailPage({ params }: PageProps) {
     const rawLines = article.content ? article.content.split("\n") : [];
     const tableOfContents: { id: string; text: string; isSub: boolean }[] = [];
 
-    // Tambahkan "Abstrak" secara manual di awal daftar isi jika ada isinya
     if (article.abstract) {
         tableOfContents.push({ id: "abstract-section", text: "Abstrak", isSub: false });
     }
@@ -66,7 +65,6 @@ export default async function ArticleDetailPage({ params }: PageProps) {
         }
     });
 
-    // Tambahkan "Daftar Pustaka" di akhir daftar isi jika kolom keywords/pustaka ada isinya
     if (article.keywords) {
         tableOfContents.push({ id: "references-section", text: "Daftar Pustaka", isSub: false });
     }
@@ -77,7 +75,6 @@ export default async function ArticleDetailPage({ params }: PageProps) {
             const trimmedLine = line.trim();
             if (!trimmedLine) return null;
 
-            // 1. Render Bab Utama (H2 ala Wikipedia)
             if (
                 /^[IVXLCDM]+\.\s+/i.test(trimmedLine) ||
                 /^[A-Z]\.\s+/i.test(trimmedLine) ||
@@ -91,7 +88,6 @@ export default async function ArticleDetailPage({ params }: PageProps) {
                 );
             }
 
-            // 2. Render Sub-Bab (H3)
             if (/^\d+\.\s+/g.test(trimmedLine) || trimmedLine.startsWith("Prinsip") || trimmedLine.endsWith(":")) {
                 const id = trimmedLine.toLowerCase().replace(/[^a-z0-9]/g, "-");
                 return (
@@ -101,7 +97,6 @@ export default async function ArticleDetailPage({ params }: PageProps) {
                 );
             }
 
-            // 3. Render Gambar Ilustrasi / Paste
             if (trimmedLine.startsWith("http://") || trimmedLine.startsWith("https://") || trimmedLine.startsWith("/uploads/")) {
                 const cleanUrl = trimmedLine.split(" ")[0];
                 return (
@@ -114,11 +109,10 @@ export default async function ArticleDetailPage({ params }: PageProps) {
                 );
             }
 
-            // 4. Paragraf Utama (Mendukung Parsing Otomatis Bold, Italic, Underline)
             let parsedLine = trimmedLine
-                .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>") // **teks** -> Tebal
-                .replace(/\*([^*]+)\*/g, "<em>$1</em>")             // *teks* -> Miring
-                .replace(/<u>(.*?)<\/u>/gi, "<u>$1</u>");           // <u>teks</u> -> Garis Bawah
+                .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+                .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+                .replace(/<u>(.*?)<\/u>/gi, "<u>$1</u>");
 
             return (
                 <p
@@ -130,7 +124,7 @@ export default async function ArticleDetailPage({ params }: PageProps) {
         });
     };
 
-    // --- LOGIKA SAKTI 2: DETEKSI & PARSING LINK OTOMATIS DI DAFTAR PUSTAKA ---
+    // --- 🛠️ LOGIKA FIX DAFTAR PUSTAKA: ANGKA ANGKA DIHAPUS MUTLAK ---
     const renderReferences = () => {
         if (!article.keywords) return null;
 
@@ -153,8 +147,9 @@ export default async function ArticleDetailPage({ params }: PageProps) {
             });
 
             return (
-                <li key={idx} className="text-[14px] font-sans text-gray-800 leading-relaxed text-justify pl-6 -indented-left mb-3 list-none">
-                    [{idx + 1}] {formattedLine}
+                // 💡 FIX: Angka [{idx + 1}] dihapus, diganti list-disc (bullet point) atau teks murni rapi
+                <li key={idx} className="text-[14px] font-sans text-gray-800 leading-relaxed text-justify mb-3 list-none border-b border-gray-100 pb-2 last:border-0">
+                    🔹 {formattedLine}
                 </li>
             );
         });
@@ -209,7 +204,7 @@ export default async function ArticleDetailPage({ params }: PageProps) {
                         </div>
                     )}
 
-                    {/* STRUCTURE 1: JUDUL UTAMAA AUTOMATIC UPPERCASE */}
+                    {/* STRUCTURE 1: JUDUL UTAMA */}
                     <div id="title-top" className="border-b border-gray-300 pb-3 mb-4">
                         <h1 className="text-2xl md:text-3xl font-serif text-black font-bold tracking-tight uppercase leading-snug">
                             {article.title}
@@ -233,7 +228,7 @@ export default async function ArticleDetailPage({ params }: PageProps) {
                         <p className="text-[11px] text-gray-400 mt-2 italic">Diterbitkan melalui Portal Artikel Ilmiah Universitas Siliwangi, ensiklopedia kebebasan akademik mahasiswa.</p>
                     </div>
 
-                    {/* STRUCTURE 3: KOTAK ABSTRAK BERBEDA FONT & MAJU KEDALAM */}
+                    {/* STRUCTURE 3: KOTAK ABSTRAK */}
                     {article.abstract && (
                         <div id="abstract-section" className="bg-slate-50/60 border border-gray-300 p-5 rounded-2xl mb-6 scroll-mt-6">
                             <h3 className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-2 text-center">ABSTRAK</h3>
@@ -257,7 +252,7 @@ export default async function ArticleDetailPage({ params }: PageProps) {
                         {renderWikipediaContent()}
                     </div>
 
-                    {/* STRUCTURE 5: DAFTAR PUSTAKA PREMIUM DENGAN LINK YANG BISA DIAKSES */}
+                    {/* STRUCTURE 5: DAFTAR PUSTAKA PREMIUM TANPA PENOMORAN ANGKA */}
                     {article.keywords && (
                         <div id="references-section" className="mt-12 border-t-2 border-gray-300 pt-6 scroll-mt-6">
                             <h2 className="text-xl font-serif text-black mb-4 font-normal border-b border-gray-300 pb-1">
