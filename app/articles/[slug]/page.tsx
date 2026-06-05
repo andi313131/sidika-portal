@@ -1,4 +1,3 @@
-// app/articles/[slug]/page.tsx
 import { PrismaClient } from "@prisma/client";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -12,9 +11,29 @@ interface PageProps {
 export default async function ArticleDetailPage({ params }: PageProps) {
     const { slug } = await params;
 
+    // 🛠️ FIX UTAMA: Panggil kolom abstract dan keywords secara eksplisit dari database
     const article = await prisma.article.findUnique({
         where: { slug: slug },
-        include: { author: true }
+        select: {
+            id: true,
+            title: true,
+            content: true,
+            abstract: true,   // 🔥 Ditarik aman biar Abstrak muncul
+            keywords: true,   // 🔥 Ditarik aman biar Daftar Pustaka muncul
+            coverImageUrl: true,
+            createdAt: true,
+            slug: true,
+            author: {
+                select: {
+                    name: true,
+                    email: true,
+                    fullName: true,
+                    nim: true,
+                    role: true,
+                    studyProgram: true
+                }
+            }
+        }
     });
 
     if (!article) {
@@ -96,7 +115,6 @@ export default async function ArticleDetailPage({ params }: PageProps) {
             }
 
             // 4. Paragraf Utama (Mendukung Parsing Otomatis Bold, Italic, Underline)
-            // Mengonversi string format mentah menjadi tag HTML asli
             let parsedLine = trimmedLine
                 .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>") // **teks** -> Tebal
                 .replace(/\*([^*]+)\*/g, "<em>$1</em>")             // *teks* -> Miring
@@ -106,7 +124,7 @@ export default async function ArticleDetailPage({ params }: PageProps) {
                 <p
                     key={index}
                     className="text-[15px] font-serif text-gray-950 leading-relaxed mb-4 text-justify tracking-normal select-text"
-                    dangerouslySetInnerHTML={{ __html: parsedLine }} // 👈 WAJIB PAKAI INI biar HTML tag-nya aktif dibaca browser!
+                    dangerouslySetInnerHTML={{ __html: parsedLine }}
                 />
             );
         });
@@ -121,10 +139,7 @@ export default async function ArticleDetailPage({ params }: PageProps) {
             const trimmed = line.trim();
             if (!trimmed) return null;
 
-            // Regex untuk mendeteksi url http/https di dalam kalimat referensi
             const urlRegex = /(https?:\/\/[^\s]+)/g;
-
-            // Mengubah string link mentah menjadi komponen tag <a> asli yang bisa diklik langsung
             const parts = trimmed.split(urlRegex);
             const formattedLine = parts.map((part, i) => {
                 if (urlRegex.test(part)) {
@@ -203,9 +218,17 @@ export default async function ArticleDetailPage({ params }: PageProps) {
                         {/* STRUCTURE 2: DATA AUTHOR KECIL PERSIS DI BAWAH JUDUL */}
                         <div className="text-xs text-gray-500 mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 bg-slate-50 border border-slate-200/60 p-2.5 rounded-xl">
                             <span className="font-semibold text-gray-800">✍️ Penulis Kontributor:</span>
-                            <span className="font-bold text-slate-900 underline">{article.author?.fullName || article.author?.name || "Mahasiswa"}</span>
-                            {article.author?.nim && <span className="text-gray-400">({article.author.role === "lecturer" ? "NIP" : "NIM"}: {article.author.nim})</span>}
-                            {article.author?.studyProgram && <span className="text-emerald-800 font-medium">• Progdi {article.author.studyProgram}</span>}
+                            <span className="font-bold text-slate-900 underline">
+                                {article.author?.fullName || article.author?.name || "Mahasiswa"}
+                            </span>
+                            {article.author?.nim && (
+                                <span className="text-gray-400">
+                                    ({article.author.role === "lecturer" ? "NIP" : "NIM"}: {article.author.nim})
+                                </span>
+                            )}
+                            {article.author?.studyProgram && (
+                                <span className="text-emerald-800 font-medium">• Progdi {article.author.studyProgram}</span>
+                            )}
                         </div>
                         <p className="text-[11px] text-gray-400 mt-2 italic">Diterbitkan melalui Portal Artikel Ilmiah Universitas Siliwangi, ensiklopedia kebebasan akademik mahasiswa.</p>
                     </div>
