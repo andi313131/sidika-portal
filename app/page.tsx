@@ -74,7 +74,7 @@ export default function PublicFeedPage() {
             />
             <div className="w-px h-5 bg-stone-200" />
             <div>
-              <span className="text-sm font-bold text-[#009900] tracking-tight leading-none block">SIDIKA</span>
+              <span className="text-sm font-bold text-[#005c27] tracking-tight leading-none block">SIDIKA</span>
               <span className="text-[10px] text-stone-400 leading-none tracking-wide">Portal Ilmiah UNSIL</span>
             </div>
           </div>
@@ -83,7 +83,7 @@ export default function PublicFeedPage() {
           {userSession ? (
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-1.5 h-9 px-4 text-sm font-semibold text-white bg-[#009900] hover:bg-[#007a00] rounded-lg transition-all shadow-sm shadow-green-900/10"
+              className="inline-flex items-center gap-1.5 h-9 px-4 text-sm font-semibold text-white bg-[#005c27] hover:bg-[#00421c] rounded-lg transition-all shadow-sm shadow-green-950/10"
             >
               Dashboard
               <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
@@ -93,7 +93,7 @@ export default function PublicFeedPage() {
           ) : (
             <Link
               href="/api/auth/signin"
-              className="inline-flex items-center gap-1.5 h-9 px-4 text-sm font-semibold text-[#009900] border border-[#009900]/40 hover:bg-[#009900]/5 rounded-lg transition-all"
+              className="inline-flex items-center gap-1.5 h-9 px-4 text-sm font-semibold text-[#005c27] border border-[#005c27]/40 hover:bg-[#005c27]/5 rounded-lg transition-all"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
@@ -105,7 +105,7 @@ export default function PublicFeedPage() {
       </header>
 
       {/* ─── HERO ────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-[#009900]">
+      <section className="relative overflow-hidden bg-[#005c27]">
         {/* Subtle pattern overlay */}
         <div
           className="absolute inset-0 opacity-[0.07]"
@@ -125,6 +125,7 @@ export default function PublicFeedPage() {
             Ensiklopedia Bebas Mahasiswa
           </div>
 
+          {/* Judul Hero */}
           <h2 className="text-3xl md:text-[2.75rem] font-serif font-normal text-white leading-tight mb-5">
             Siliwangi Intelektual Digital<br className="hidden md:block" /> Karya Artikel
           </h2>
@@ -161,10 +162,10 @@ export default function PublicFeedPage() {
 
         {/* Section header */}
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-1 h-6 rounded-full bg-[#009900]" />
+          <div className="w-1 h-6 rounded-full bg-[#005c27]" />
           <h3 className="text-lg font-bold text-stone-800">Artikel & Esai Terbaru</h3>
           {!loading && articles.length > 0 && (
-            <span className="text-xs font-semibold text-[#009900] bg-green-50 border border-green-100 px-2 py-0.5 rounded-md">
+            <span className="text-xs font-semibold text-[#005c27] bg-green-50 border border-green-100 px-2 py-0.5 rounded-md">
               {articles.length} karya
             </span>
           )}
@@ -182,7 +183,7 @@ export default function PublicFeedPage() {
         ) : articles.length === 0 ? (
           <div className="flex flex-col items-center justify-center bg-white border border-stone-200 rounded-2xl py-20 text-center max-w-sm mx-auto">
             <div className="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-[#009900]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-[#005c27]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 0 1-2.25 2.25M16.5 7.5V18a2.25 2.25 0 0 0 2.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 0 0 2.25 2.25h13.5M6 7.5h3v3H6v-3Z" />
               </svg>
             </div>
@@ -192,7 +193,7 @@ export default function PublicFeedPage() {
             </p>
             <Link
               href="/dashboard"
-              className="mt-5 inline-flex items-center gap-1.5 text-xs font-semibold bg-[#009900] hover:bg-[#007a00] text-white px-4 py-2 rounded-lg transition-all"
+              className="mt-5 inline-flex items-center gap-1.5 text-xs font-semibold bg-[#005c27] hover:bg-[#00421c] text-white px-4 py-2 rounded-lg transition-all"
             >
               Mulai Menulis →
             </Link>
@@ -204,7 +205,7 @@ export default function PublicFeedPage() {
             {articles.map((article) => (
               <article
                 key={article.id}
-                className="bg-white rounded-2xl border border-stone-200 overflow-hidden hover:border-[#009900]/30 hover:shadow-md hover:shadow-green-900/5 transition-all group flex flex-col"
+                className="bg-white rounded-2xl border border-stone-200 overflow-hidden hover:border-[#005c27]/30 hover:shadow-md hover:shadow-green-950/5 transition-all group flex flex-col"
               >
                 {/* Cover image */}
                 {article.coverImageUrl ? (
@@ -221,8 +222,8 @@ export default function PublicFeedPage() {
                 ) : (
                   /* Placeholder cover when no image */
                   <div className="w-full h-24 bg-gradient-to-br from-green-50 to-green-100/60 shrink-0 flex items-center justify-center">
-                    <div className="w-8 h-8 rounded-full bg-[#009900]/10 flex items-center justify-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-[#009900]/40" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <div className="w-8 h-8 rounded-full bg-[#005c27]/10 flex items-center justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-[#005c27]/40" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                       </svg>
                     </div>
@@ -233,14 +234,14 @@ export default function PublicFeedPage() {
                 <div className="p-5 flex flex-col flex-1">
                   {/* Status badge */}
                   <div className="flex items-center gap-1.5 mb-3">
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#009900] bg-green-50 border border-green-100 px-2 py-0.5 rounded-md uppercase tracking-wide">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#009900]" />
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#005c27] bg-green-50 border border-green-100 px-2 py-0.5 rounded-md uppercase tracking-wide">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#005c27]" />
                       Published
                     </span>
                   </div>
 
                   {/* Title */}
-                  <h4 className="font-serif text-base font-medium text-stone-900 line-clamp-2 group-hover:text-[#009900] transition-colors leading-snug flex-1">
+                  <h4 className="font-serif text-base font-medium text-stone-900 line-clamp-2 group-hover:text-[#005c27] transition-colors leading-snug flex-1">
                     {article.title}
                   </h4>
 
@@ -260,7 +261,7 @@ export default function PublicFeedPage() {
                     </div>
                     <Link
                       href={`/articles/${article.slug}`}
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-[#009900] hover:text-[#007a00] shrink-0 group/link"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-[#005c27] hover:text-[#00421c] shrink-0 group/link"
                     >
                       Baca
                       <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 transition-transform group-hover/link:translate-x-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
@@ -285,7 +286,7 @@ export default function PublicFeedPage() {
           <p className="text-[11px] text-stone-300">© {new Date().getFullYear()} Universitas Siliwangi · Tasikmalaya</p>
         </div>
         {/* UNSIL color strip */}
-        <div className="h-0.5 bg-gradient-to-r from-[#009900] via-[#FFD700] to-[#009900]" />
+        <div className="h-0.5 bg-gradient-to-r from-[#005c27] via-[#FFD700] to-[#005c27]" />
       </footer>
 
     </div>
