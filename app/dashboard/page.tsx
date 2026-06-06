@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { signOut } from "next-auth/react"; // 💡 Import fungsi resmi NextAuth
+import { signOut } from "next-auth/react";
 
 interface Article {
     id: string;
@@ -24,7 +24,6 @@ export default function DashboardPage() {
     const [isAdmin, setIsAdmin] = useState<boolean>(false);
     const [activeTab, setActiveTab] = useState<"my-articles" | "review-panel">("my-articles");
 
-    // 🛡️ FUNGSI SAKTI: Bersihkan string Base64 panjang agar kartu dashboard tidak freeze & rusak
     const getCleanPreview = (text: string) => {
         if (!text) return "";
         const base64Regex = /data:image\/[a-zA-Z]+;base64,[^ \n\r\t]+/g;
@@ -72,22 +71,18 @@ export default function DashboardPage() {
         fetchDashboardData();
     }, []);
 
-    // 🛠️ FIX LOGOUT AGRESIF: Hancurkan sisa token di cookie dan bersihkan cache router browser
     const handleLogout = async () => {
         const yakin = confirm("Apakah kamu yakin ingin keluar dari sistem SIDIKA Portal?");
         if (!yakin) return;
 
         try {
-            // 1. Panggil signOut bawaan dengan mematikan auto-redirect agar baris kode bawahnya bisa jalan dulu
             await signOut({ redirect: false });
 
-            // 2. Taktik Pembersihan Paksa: Hapus manual semua variasi nama cookie session NextAuth
             document.cookie = "authjs.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
             document.cookie = "next-auth.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
             document.cookie = "__Secure-authjs.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; secure;";
             document.cookie = "__Secure-next-auth.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; secure;";
 
-            // 3. Gunakan hard redirection murni ke halaman masuk agar cache state Next.js rontok semua
             window.location.href = "/auth/signin";
         } catch (error) {
             console.error("Logout_Error:", error);
@@ -143,61 +138,100 @@ export default function DashboardPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50/50 p-4 md:p-8">
-            <div className="max-w-5xl mx-auto">
+        <div className="min-h-screen bg-[#F7F6F3]">
 
-                {/* Header Dashboard */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-                    <div>
-                        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-                            {isAdmin ? "👑 Ruang Kendali Editor" : "📚 Dashboard Artikel"}
-                        </h1>
-                        <p className="text-gray-500 text-sm mt-1">
-                            {isAdmin ? "Sistem kurasi esai terintegrasi Universitas Siliwangi." : "Kelola dan lihat semua hasil publikasi karyamu di sini."}
-                        </p>
+            {/* ─── TOP NAV BAR ─────────────────────────────────────────────── */}
+            <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-stone-200/70">
+                <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+
+                    {/* Logo / Title */}
+                    <div className="flex items-center gap-3">
+                        <div className="w-7 h-7 rounded-lg bg-stone-800 flex items-center justify-center">
+                            <span className="text-white text-xs font-bold tracking-tight">SD</span>
+                        </div>
+                        <span className="font-semibold text-stone-800 text-sm tracking-tight">SIDIKA Portal</span>
                     </div>
 
-                    {/* Menu Navigasi Nav Bar Atas */}
-                    <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+                    {/* Nav Actions */}
+                    <nav className="flex items-center gap-2">
                         <Link
                             href="/dashboard/profile"
-                            className="inline-flex items-center justify-center px-4 py-2.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold rounded-xl transition-all shadow-sm cursor-pointer text-sm gap-1"
+                            className="h-9 px-4 inline-flex items-center gap-1.5 text-sm font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-100 rounded-lg transition-all"
                         >
-                            👤 Profil
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                            </svg>
+                            Profil
                         </Link>
 
                         <Link
                             href="/write"
-                            className="inline-flex items-center justify-center px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold rounded-xl transition-all shadow-sm shadow-emerald-700/10 cursor-pointer text-sm shrink-0 gap-1"
+                            className="h-9 px-4 inline-flex items-center gap-1.5 text-sm font-medium bg-stone-800 hover:bg-stone-900 text-white rounded-lg transition-all shadow-sm"
                         >
-                            ✏️ Tulis Karya
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+                            </svg>
+                            Tulis Karya
                         </Link>
 
                         <button
                             onClick={handleLogout}
-                            className="inline-flex items-center justify-center px-4 py-2.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 font-semibold rounded-xl transition-all shadow-sm cursor-pointer text-sm gap-1"
+                            className="h-9 px-4 inline-flex items-center gap-1.5 text-sm font-medium text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all border border-transparent hover:border-red-100 cursor-pointer"
                         >
-                            🚪 Keluar
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15" />
+                            </svg>
+                            Keluar
                         </button>
-                    </div>
+                    </nav>
+                </div>
+            </header>
+
+            {/* ─── PAGE BODY ────────────────────────────────────────────────── */}
+            <main className="max-w-6xl mx-auto px-6 py-10">
+
+                {/* Page Header */}
+                <div className="mb-8">
+                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">
+                        {isAdmin ? "Ruang Kendali Editor" : "Dashboard"}
+                    </p>
+                    <h1 className="text-2xl font-bold text-stone-900 tracking-tight">
+                        {isAdmin ? "Kurasi & Manajemen Konten" : "Tulisan Saya"}
+                    </h1>
+                    <p className="text-stone-500 text-sm mt-1">
+                        {isAdmin
+                            ? "Sistem kurasi esai terintegrasi Universitas Siliwangi."
+                            : "Kelola dan lihat semua hasil publikasi karyamu di sini."
+                        }
+                    </p>
                 </div>
 
-                {/* TAB NAVIGATION PANEL */}
+                {/* ─── TAB NAVIGATION (Admin only) ─── */}
                 {isAdmin && (
-                    <div className="flex border-b border-gray-200 mb-6 gap-2">
+                    <div className="flex gap-1 mb-8 bg-stone-100 p-1 rounded-xl w-fit">
                         <button
                             onClick={() => setActiveTab("my-articles")}
-                            className={`px-4 py-2 text-sm font-semibold border-b-2 transition-all cursor-pointer ${activeTab === "my-articles" ? "border-emerald-700 text-emerald-700" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+                            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all cursor-pointer ${activeTab === "my-articles"
+                                    ? "bg-white text-stone-900 shadow-sm"
+                                    : "text-stone-500 hover:text-stone-700"
+                                }`}
                         >
-                            📝 Tulisanku ({articles.length})
+                            Tulisanku
+                            <span className={`ml-2 text-xs font-semibold px-1.5 py-0.5 rounded-md ${activeTab === "my-articles" ? "bg-stone-100 text-stone-600" : "bg-stone-200 text-stone-500"
+                                }`}>
+                                {articles.length}
+                            </span>
                         </button>
                         <button
                             onClick={() => setActiveTab("review-panel")}
-                            className={`px-4 py-2 text-sm font-semibold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === "review-panel" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+                            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2 cursor-pointer ${activeTab === "review-panel"
+                                    ? "bg-white text-stone-900 shadow-sm"
+                                    : "text-stone-500 hover:text-stone-700"
+                                }`}
                         >
-                            <span>🔍 Antrean Review</span>
+                            Antrean Review
                             {pendingArticles.length > 0 && (
-                                <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                <span className="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
                                     {pendingArticles.length}
                                 </span>
                             )}
@@ -205,129 +239,170 @@ export default function DashboardPage() {
                     </div>
                 )}
 
-                {/* KONTEN UTAMA */}
+                {/* ─── CONTENT ──────────────────────────────────────────────── */}
+
                 {loading ? (
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 animate-pulse">
+                    /* Skeleton Loader */
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {[1, 2, 3].map((n) => (
-                            <div key={n} className="bg-white border border-gray-200 rounded-2xl p-5 flex flex-col justify-between h-[240px] shadow-sm">
-                                <div>
-                                    <div className="flex items-center justify-between gap-2 mb-4">
-                                        <div className="h-5 w-16 bg-gray-200 rounded-md"></div>
-                                        <div className="h-3 w-24 bg-gray-200 rounded-md"></div>
-                                    </div>
-                                    <div className="space-y-2 mb-4">
-                                        <div className="h-4 w-11/12 bg-gray-200 rounded-md"></div>
-                                        <div className="h-4 w-3/4 bg-gray-200 rounded-md"></div>
-                                    </div>
-                                    <div className="p-3 bg-gray-50 rounded-xl border border-gray-100/80 space-y-2">
-                                        <div className="h-2.5 w-full bg-gray-200 rounded-md"></div>
-                                        <div className="h-2.5 w-full bg-gray-200 rounded-md"></div>
-                                        <div className="h-2.5 w-4/5 bg-gray-200 rounded-md"></div>
-                                    </div>
+                            <div key={n} className="bg-white border border-stone-200 rounded-2xl p-6 animate-pulse">
+                                <div className="flex items-center justify-between mb-5">
+                                    <div className="h-4 w-16 bg-stone-100 rounded-md" />
+                                    <div className="h-3 w-20 bg-stone-100 rounded-md" />
                                 </div>
-                                <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
-                                    <div className="h-3 w-10 bg-gray-200 rounded-md"></div>
-                                    <div className="h-3 w-12 bg-gray-200 rounded-md"></div>
+                                <div className="space-y-2 mb-5">
+                                    <div className="h-4 w-full bg-stone-100 rounded-md" />
+                                    <div className="h-4 w-4/5 bg-stone-100 rounded-md" />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <div className="h-3 w-full bg-stone-50 rounded" />
+                                    <div className="h-3 w-full bg-stone-50 rounded" />
+                                    <div className="h-3 w-3/4 bg-stone-50 rounded" />
+                                </div>
+                                <div className="mt-6 pt-4 border-t border-stone-100 flex justify-between">
+                                    <div className="h-3 w-12 bg-stone-100 rounded" />
+                                    <div className="h-3 w-14 bg-stone-100 rounded" />
                                 </div>
                             </div>
                         ))}
                     </div>
+
                 ) : isAdmin && activeTab === "review-panel" ? (
-                    /* --- 1. TAMPILAN GUDANG REVIEW ADMIN --- */
+                    /* ─── REVIEW PANEL ─── */
                     pendingArticles.length === 0 ? (
-                        <div className="text-center bg-white border border-gray-200 rounded-2xl p-12 shadow-sm">
-                            <span className="text-4xl block mb-3">✅</span>
-                            <h3 className="text-base font-semibold text-gray-900">Gudang Antrean Bersih</h3>
-                            <p className="text-gray-500 text-sm max-w-sm mx-auto mt-1">
+                        <div className="flex flex-col items-center justify-center bg-white border border-stone-200 rounded-2xl py-20 text-center">
+                            <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-emerald-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                </svg>
+                            </div>
+                            <h3 className="text-sm font-semibold text-stone-800">Semua bersih</h3>
+                            <p className="text-stone-400 text-xs mt-1 max-w-xs">
                                 Semua draf esai mahasiswa UNSIL sudah selesai anda review, Ndik.
                             </p>
                         </div>
                     ) : (
                         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                             {pendingArticles.map((article) => (
-                                <div key={article.id} className="bg-white border-2 border-blue-100 rounded-2xl p-5 shadow-sm flex flex-col justify-between hover:border-blue-300 transition-all">
+                                <div key={article.id} className="bg-white border border-stone-200 rounded-2xl p-6 flex flex-col justify-between hover:border-amber-300 hover:shadow-sm transition-all group">
                                     <div>
-                                        <div className="flex items-center justify-between gap-2 mb-3">
-                                            <span className="px-2.5 py-1 text-[10px] font-bold rounded-md bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wider">
-                                                PENDING
+                                        {/* Meta row */}
+                                        <div className="flex items-center justify-between gap-2 mb-4">
+                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold rounded-md bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wider">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                                                Pending
                                             </span>
-                                            <span className="text-[10px] text-gray-400 font-semibold line-clamp-1">
-                                                👤 {article.author?.name || "Mahasiswa"}
+                                            <span className="text-[11px] text-stone-400 truncate max-w-[130px]">
+                                                {article.author?.name || "Mahasiswa"}
                                             </span>
                                         </div>
-                                        <h3 className="font-bold text-gray-900 line-clamp-2 text-base mb-2">
+
+                                        {/* Title */}
+                                        <h3 className="font-semibold text-stone-900 line-clamp-2 text-sm leading-snug mb-3">
                                             {article.title}
                                         </h3>
-                                        <p className="text-gray-500 text-xs line-clamp-4 leading-relaxed bg-slate-50 p-2.5 rounded-lg border border-slate-100 whitespace-pre-line">
+
+                                        {/* Preview */}
+                                        <p className="text-stone-400 text-xs line-clamp-4 leading-relaxed whitespace-pre-line">
                                             {getCleanPreview(article.content)}
                                         </p>
                                     </div>
 
-                                    <div className="mt-5 pt-4 border-t border-gray-100 flex flex-col gap-2">
+                                    {/* Actions */}
+                                    <div className="mt-6 pt-4 border-t border-stone-100 space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <Link href={`/articles/${article.slug}`} className="text-xs font-semibold text-slate-500 hover:underline">
-                                                Intip Teks →
+                                            <Link
+                                                href={`/articles/${article.slug}`}
+                                                className="text-xs font-medium text-stone-400 hover:text-stone-700 transition-colors"
+                                            >
+                                                Baca lengkap →
                                             </Link>
                                             <button
                                                 onClick={() => handleApprove(article.id)}
-                                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-all shadow-sm cursor-pointer"
+                                                className="inline-flex items-center gap-1 bg-stone-800 hover:bg-stone-900 text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg transition-all cursor-pointer"
                                             >
-                                                Approve
+                                                Setujui
                                             </button>
                                         </div>
                                         <button
                                             onClick={() => handleDelete(article.id)}
-                                            className="w-full text-center text-[11px] font-semibold text-red-500 hover:bg-red-50 py-1.5 rounded-lg border border-transparent hover:border-red-100 transition-all cursor-pointer"
+                                            className="w-full text-center text-[11px] font-medium text-red-400 hover:text-red-600 hover:bg-red-50 py-1.5 rounded-lg border border-transparent hover:border-red-100 transition-all cursor-pointer"
                                         >
-                                            🗑️ Tolak & Hapus Selamanya
+                                            Tolak & hapus permanen
                                         </button>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     )
+
                 ) : (
-                    /* --- 2. TAMPILAN DAFTAR TULISAN AKUN SENDIRI --- */
+                    /* ─── MY ARTICLES ─── */
                     articles.length === 0 ? (
-                        <div className="text-center bg-white border border-gray-200 rounded-2xl p-12 shadow-sm">
-                            <span className="text-4xl block mb-3">📁</span>
-                            <h3 className="text-base font-semibold text-gray-900">Belum ada artikel</h3>
+                        <div className="flex flex-col items-center justify-center bg-white border border-stone-200 rounded-2xl py-20 text-center">
+                            <div className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-stone-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-sm font-semibold text-stone-800">Belum ada artikel</h3>
+                            <p className="text-stone-400 text-xs mt-1">Mulai dengan menulis karya pertamamu.</p>
+                            <Link
+                                href="/write"
+                                className="mt-5 inline-flex items-center gap-1.5 text-xs font-semibold bg-stone-800 hover:bg-stone-900 text-white px-4 py-2 rounded-lg transition-all"
+                            >
+                                Tulis sekarang →
+                            </Link>
                         </div>
                     ) : (
                         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                             {articles.map((article) => (
-                                <div key={article.id} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-emerald-600/30 transition-all flex flex-col justify-between">
+                                <div key={article.id} className="bg-white border border-stone-200 rounded-2xl p-6 flex flex-col justify-between hover:border-stone-300 hover:shadow-sm transition-all group">
                                     <div>
-                                        <div className="flex items-center justify-between gap-2 mb-3">
-                                            <span className={`px-2.5 py-1 text-xs font-semibold rounded-md uppercase tracking-wider ${article.status === "PENDING" ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-700"}`}>
-                                                {article.status}
+                                        {/* Meta row */}
+                                        <div className="flex items-center justify-between gap-2 mb-4">
+                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold rounded-md uppercase tracking-wider border ${article.status === "PENDING"
+                                                    ? "bg-amber-50 text-amber-700 border-amber-200"
+                                                    : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                                }`}>
+                                                <span className={`w-1.5 h-1.5 rounded-full ${article.status === "PENDING" ? "bg-amber-400" : "bg-emerald-500"
+                                                    }`} />
+                                                {article.status === "PENDING" ? "Menunggu" : "Tayang"}
                                             </span>
-                                            <span className="text-xs text-gray-400">
+                                            <time className="text-[11px] text-stone-400">
                                                 {new Date(article.createdAt).toLocaleDateString("id-ID", {
                                                     day: "numeric",
                                                     month: "short",
                                                     year: "numeric"
                                                 })}
-                                            </span>
+                                            </time>
                                         </div>
-                                        <h3 className="font-bold text-gray-900 line-clamp-2 text-base mb-2">
+
+                                        {/* Title */}
+                                        <h3 className="font-semibold text-stone-900 line-clamp-2 text-sm leading-snug mb-3">
                                             {article.title}
                                         </h3>
-                                        <p className="text-gray-500 text-xs line-clamp-4 leading-relaxed whitespace-pre-line">
+
+                                        {/* Preview */}
+                                        <p className="text-stone-400 text-xs line-clamp-4 leading-relaxed whitespace-pre-line">
                                             {getCleanPreview(article.content)}
                                         </p>
                                     </div>
 
-                                    <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between">
+                                    {/* Actions */}
+                                    <div className="mt-6 pt-4 border-t border-stone-100 flex items-center justify-between">
                                         <button
                                             onClick={() => handleDelete(article.id)}
-                                            className="text-xs font-semibold text-red-500 hover:text-red-700 hover:underline cursor-pointer"
+                                            className="text-xs font-medium text-stone-400 hover:text-red-500 transition-colors cursor-pointer"
                                         >
                                             Hapus
                                         </button>
-                                        <Link href={`/articles/${article.slug}`} className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 transition-colors cursor-pointer inline-flex items-center gap-0.5 group">
+                                        <Link
+                                            href={`/articles/${article.slug}`}
+                                            className="inline-flex items-center gap-0.5 text-xs font-semibold text-stone-600 hover:text-stone-900 transition-colors group/link"
+                                        >
                                             <span>Baca</span>
-                                            <span className="transition-transform group-hover:translate-x-0.5">→</span>
+                                            <span className="transition-transform group-hover/link:translate-x-0.5">→</span>
                                         </Link>
                                     </div>
                                 </div>
@@ -336,7 +411,7 @@ export default function DashboardPage() {
                     )
                 )}
 
-            </div>
+            </main>
         </div>
     );
 }

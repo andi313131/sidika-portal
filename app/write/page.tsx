@@ -8,7 +8,6 @@ export default function WriteArticlePage() {
     const router = useRouter();
     const mainContentRef = useRef<HTMLTextAreaElement>(null);
 
-    // State Form Terpisah Sesuai Standar Jurnal Ilmiah
     const [title, setTitle] = useState<string>("");
     const [authors, setAuthors] = useState<string>("");
     const [abstract, setAbstract] = useState<string>("");
@@ -16,7 +15,6 @@ export default function WriteArticlePage() {
     const [mainContent, setMainContent] = useState<string>("");
     const [dapus, setDapus] = useState<string>("");
 
-    // State Gambar Cover
     const [coverUrl, setCoverUrl] = useState<string>("");
     const [uploadingImage, setUploadingImage] = useState<boolean>(false);
 
@@ -24,7 +22,6 @@ export default function WriteArticlePage() {
     const [ocrProgress, setOcrProgress] = useState<string>("");
     const [isPublishing, setIsPublishing] = useState<boolean>(false);
 
-    // --- FUNGSI FORMAT TEXT INJECTION ---
     const applyFormatting = (formatType: "bold" | "italic" | "underline") => {
         const textarea = mainContentRef.current;
         if (!textarea) return;
@@ -66,7 +63,6 @@ export default function WriteArticlePage() {
         }, 50);
     };
 
-    // --- FUNGSI UNGGAH GAMBAR ---
     const handleImageUpload = async (file: File, isCover: boolean) => {
         const formData = new FormData();
         formData.append("file", file);
@@ -101,7 +97,6 @@ export default function WriteArticlePage() {
         }
     };
 
-    // --- FUNGSI INTERCEPT PASTE GAMBAR ---
     const handleContentPaste = async (e: ClipboardEvent<HTMLTextAreaElement>) => {
         const items = e.clipboardData?.items;
         if (!items) return;
@@ -137,7 +132,6 @@ export default function WriteArticlePage() {
         }
     };
 
-    // --- 🛠️ FIX UTAMA JALUR IMPOR: KODE UTUH ANTI-KEPOTONG ---
     const handleFileImport = async (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -226,7 +220,6 @@ export default function WriteArticlePage() {
         }
     };
 
-    // --- FUNGSI SUBMIT DATA ARTIKEL (BERSIH DARI LABEL BAB OTOMATIS) ---
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
@@ -271,50 +264,85 @@ export default function WriteArticlePage() {
         }
     };
 
-    return (
-        <div className="min-h-screen bg-emerald-50/40 p-4 md:p-8">
-            <div className="max-w-3xl mx-auto bg-white rounded-3xl shadow-sm border border-emerald-900/10 p-6 md:p-8">
+    /* ─── shared input classes ─── */
+    const inputBase =
+        "w-full px-4 py-3 rounded-xl border border-stone-200 bg-stone-50 text-stone-900 placeholder:text-stone-300 focus:outline-none focus:border-stone-400 focus:bg-white focus:ring-2 focus:ring-stone-900/5 transition-all text-sm leading-relaxed disabled:opacity-50";
 
-                <div className="mb-6">
-                    <Link href="/dashboard" className="inline-flex items-center gap-1 text-sm font-medium text-gray-500 hover:text-emerald-700 transition-colors group cursor-pointer">
-                        <span className="transition-transform group-hover:-translate-x-1">←</span>
-                        <span>Kembali ke Dashboard</span>
+    return (
+        <div className="min-h-screen bg-[#F7F6F3]">
+
+            {/* ─── STICKY HEADER ──────────────────────────────────────────── */}
+            <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-stone-200/70">
+                <div className="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between">
+                    <Link
+                        href="/dashboard"
+                        className="inline-flex items-center gap-1.5 text-sm font-medium text-stone-500 hover:text-stone-900 transition-colors group"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                        </svg>
+                        Dashboard
                     </Link>
+
+                    <div className="flex items-center gap-3">
+                        <div className="w-6 h-6 rounded-md bg-stone-800 flex items-center justify-center">
+                            <span className="text-white text-[9px] font-bold tracking-tight">SD</span>
+                        </div>
+                        <span className="font-semibold text-stone-800 text-sm tracking-tight">SIDIKA Portal</span>
+                    </div>
+                </div>
+            </header>
+
+            {/* ─── BODY ───────────────────────────────────────────────────── */}
+            <main className="max-w-3xl mx-auto px-6 py-10">
+
+                {/* Page Title */}
+                <div className="mb-8">
+                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">Penulisan Baru</p>
+                    <h1 className="text-2xl font-bold text-stone-900 tracking-tight">Tulis Artikel</h1>
+                    <p className="text-stone-400 text-sm mt-1">
+                        Impor file otomatis atau ketik manual — struktur dokumen terpilah cerdas.
+                    </p>
                 </div>
 
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">✏️ Tulis Artikel Baru</h1>
-                <p className="text-gray-500 text-sm mb-8">Impor file otomatis dengan pemisahan struktur dokumen terintegrasi atau ketik manual.</p>
-
-                {/* BOX IMPOR JURNAL */}
-                <div className="mb-8 p-5 bg-emerald-50/50 border border-dashed border-emerald-300 rounded-2xl">
-                    <label className="block text-sm font-semibold text-emerald-900 mb-2">
-                        Unggah Draft (.docx / .pdf)
-                    </label>
-                    <p className="text-xs text-emerald-700 mb-4">
-                        Sistem otomatis memisahkan judul, penulis, abstrak, metode, pembahasan utama, dan daftar pustaka. File Word diproses instan secara lokal, file PDF dipilah cerdas oleh AI.
-                    </p>
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                        <input
-                            type="file"
-                            accept=".docx, .pdf"
-                            disabled={loading || isPublishing}
-                            onChange={handleFileImport}
-                            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-700 file:text-white hover:file:bg-emerald-800 file:cursor-pointer transition-all disabled:opacity-50"
-                        />
-                        {loading && (
-                            <span className="text-xs font-semibold text-emerald-700 animate-pulse shrink-0 bg-emerald-100 px-3 py-1.5 rounded-lg border border-emerald-200">
-                                {ocrProgress}
-                            </span>
-                        )}
+                {/* ─── IMPORT BOX ─── */}
+                <div className="mb-8 rounded-2xl border border-dashed border-stone-300 bg-white p-6">
+                    <div className="flex items-start gap-4">
+                        <div className="w-10 h-10 shrink-0 rounded-xl bg-stone-100 flex items-center justify-center mt-0.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-stone-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.6} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                            </svg>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-stone-800 mb-0.5">Unggah Draft (.docx / .pdf)</p>
+                            <p className="text-xs text-stone-400 mb-4 leading-relaxed">
+                                Sistem otomatis memisahkan judul, penulis, abstrak, metode, pembahasan, dan daftar pustaka. File Word diproses lokal; PDF dipilah oleh AI.
+                            </p>
+                            <input
+                                type="file"
+                                accept=".docx, .pdf"
+                                disabled={loading || isPublishing}
+                                onChange={handleFileImport}
+                                className="block w-full text-sm text-stone-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-stone-800 file:text-white hover:file:bg-stone-900 file:cursor-pointer transition-all disabled:opacity-40"
+                            />
+                            {loading && (
+                                <div className="mt-3 inline-flex items-center gap-2 text-xs font-medium text-stone-500 bg-stone-50 border border-stone-200 px-3 py-1.5 rounded-lg">
+                                    <span className="w-3 h-3 border-2 border-stone-300 border-t-stone-600 rounded-full animate-spin" />
+                                    {ocrProgress}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
-                {/* FORM INPUT TERPISAH */}
-                <form className="space-y-5" onSubmit={handleSubmit}>
+                {/* ─── FORM ─── */}
+                <form className="space-y-6" onSubmit={handleSubmit}>
 
-                    {/* BOX INPUT GAMBAR COVER */}
-                    <div className="bg-white p-5 border border-gray-200 rounded-2xl shadow-sm">
-                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Foto Cover Artikel (Opsional)</label>
+                    {/* Cover Image */}
+                    <div className="bg-white rounded-2xl border border-stone-200 p-6">
+                        <label className="block text-xs font-semibold text-stone-500 uppercase tracking-widest mb-3">
+                            Foto Cover <span className="normal-case font-normal text-stone-300">(opsional)</span>
+                        </label>
                         <input
                             type="file"
                             accept="image/*"
@@ -323,107 +351,123 @@ export default function WriteArticlePage() {
                                 const file = e.target.files?.[0];
                                 if (file) handleImageUpload(file, true);
                             }}
-                            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 file:cursor-pointer transition-all"
+                            className="block w-full text-sm text-stone-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 file:cursor-pointer transition-all"
                         />
-                        {uploadingImage && <p className="text-xs text-amber-600 mt-2 animate-pulse">⏳ Sedang memproses & menyimpan gambar...</p>}
-
+                        {uploadingImage && (
+                            <div className="mt-3 inline-flex items-center gap-2 text-xs font-medium text-amber-600">
+                                <span className="w-3 h-3 border-2 border-amber-200 border-t-amber-500 rounded-full animate-spin" />
+                                Menyimpan gambar...
+                            </div>
+                        )}
                         {coverUrl && (
-                            <div className="mt-4 rounded-xl overflow-hidden border border-gray-200 max-h-48 max-w-sm shadow-sm relative">
+                            <div className="mt-4 rounded-xl overflow-hidden border border-stone-200 max-h-52 max-w-sm">
                                 <img src={coverUrl} alt="Preview Cover" className="w-full h-full object-cover" />
                             </div>
                         )}
                     </div>
 
-                    {/* 1. JUDUL */}
+                    {/* Divider label */}
+                    <div className="flex items-center gap-3">
+                        <div className="flex-1 h-px bg-stone-200" />
+                        <span className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest">Isi Artikel</span>
+                        <div className="flex-1 h-px bg-stone-200" />
+                    </div>
+
+                    {/* 1. Judul */}
                     <div>
-                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Judul Artikel</label>
+                        <label className="block text-xs font-semibold text-stone-500 uppercase tracking-widest mb-2">Judul Artikel</label>
                         <input
                             type="text"
                             value={title}
                             disabled={isPublishing}
                             onChange={(e) => setTitle(e.target.value)}
                             placeholder="Judul utama gagasan..."
-                            className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all font-medium"
+                            className={`${inputBase} font-semibold text-base`}
                         />
                     </div>
 
-                    {/* 2. AUTHOR */}
+                    {/* 2. Author */}
                     <div>
-                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Susunan Penulis / Author</label>
+                        <label className="block text-xs font-semibold text-stone-500 uppercase tracking-widest mb-2">Susunan Penulis</label>
                         <input
                             type="text"
                             value={authors}
                             disabled={isPublishing}
                             onChange={(e) => setAuthors(e.target.value)}
                             placeholder="Nama Anggota Tim, NIM, Nama Universitas..."
-                            className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all text-sm"
+                            className={inputBase}
                         />
                     </div>
 
-                    {/* 3. ABSTRAK */}
+                    {/* 3. Abstrak */}
                     <div>
-                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Abstrak / Abstract</label>
+                        <label className="block text-xs font-semibold text-stone-500 uppercase tracking-widest mb-2">Abstrak</label>
                         <textarea
                             rows={4}
                             value={abstract}
                             disabled={isPublishing}
                             onChange={(e) => setAbstract(e.target.value)}
-                            placeholder="Tuliskan ringkasan intisari artikel (Bahasa Indonesia / English)..."
-                            className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all text-sm leading-relaxed"
+                            placeholder="Ringkasan intisari artikel (Bahasa Indonesia / English)..."
+                            className={inputBase}
                         />
                     </div>
 
-                    {/* 4. METODE PENELITIAN */}
+                    {/* 4. Metode */}
                     <div>
-                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Metode Penelitian</label>
+                        <label className="block text-xs font-semibold text-stone-500 uppercase tracking-widest mb-2">Metode Penelitian</label>
                         <textarea
                             rows={4}
                             value={methodology}
                             disabled={isPublishing}
                             onChange={(e) => setMethodology(e.target.value)}
-                            placeholder="Jelaskan pendekatan, jenis data, lokasi, and metode analisis yang digunakan..."
-                            className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all text-sm leading-relaxed"
+                            placeholder="Pendekatan, jenis data, lokasi, dan metode analisis..."
+                            className={inputBase}
                         />
                     </div>
 
-                    {/* 5. ISI UTAMA + TOOLBAR EDITING RICH TEXT */}
+                    {/* 5. Pembahasan Utama + Toolbar */}
                     <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                Pembahasan Utama Artikel
+                        <div className="flex items-center justify-between mb-2">
+                            <label className="text-xs font-semibold text-stone-500 uppercase tracking-widest">
+                                Pembahasan Utama
                             </label>
-                            <span className="text-[10px] text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded border border-blue-100">💡 Bisa Langsung Paste Gambar PDF</span>
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-blue-500 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                                </svg>
+                                Bisa paste gambar langsung
+                            </span>
                         </div>
 
-                        {/* TOOLBAR FORMATTING */}
-                        <div className="flex items-center gap-1 bg-gray-50 border border-b-0 border-gray-300 rounded-t-xl p-1.5">
+                        {/* Toolbar */}
+                        <div className="flex items-center gap-0.5 bg-stone-50 border border-stone-200 border-b-0 rounded-t-xl px-2 py-1.5">
                             <button
                                 type="button"
                                 onClick={() => applyFormatting("bold")}
-                                className="px-3 py-1 text-sm font-bold text-gray-700 hover:bg-gray-200 rounded transition-all cursor-pointer"
                                 title="Tebal (Bold)"
+                                className="w-8 h-8 flex items-center justify-center text-sm font-bold text-stone-600 hover:bg-stone-200 hover:text-stone-900 rounded-lg transition-all cursor-pointer"
                             >
                                 B
                             </button>
                             <button
                                 type="button"
                                 onClick={() => applyFormatting("italic")}
-                                className="px-3 py-1 text-sm italic font-serif text-gray-700 hover:bg-gray-200 rounded transition-all cursor-pointer"
                                 title="Miring (Italic)"
+                                className="w-8 h-8 flex items-center justify-center text-sm italic font-serif text-stone-600 hover:bg-stone-200 hover:text-stone-900 rounded-lg transition-all cursor-pointer"
                             >
                                 I
                             </button>
                             <button
                                 type="button"
                                 onClick={() => applyFormatting("underline")}
-                                className="px-3 py-1 text-sm underline text-gray-700 hover:bg-gray-200 rounded transition-all cursor-pointer"
                                 title="Garis Bawah (Underline)"
+                                className="w-8 h-8 flex items-center justify-center text-sm underline text-stone-600 hover:bg-stone-200 hover:text-stone-900 rounded-lg transition-all cursor-pointer"
                             >
                                 U
                             </button>
                         </div>
 
-                        {/* TEXTAREA UTAMA */}
+                        {/* Main Textarea */}
                         <textarea
                             ref={mainContentRef}
                             rows={12}
@@ -431,34 +475,50 @@ export default function WriteArticlePage() {
                             disabled={isPublishing}
                             onPaste={handleContentPaste}
                             onChange={(e) => setMainContent(e.target.value)}
-                            placeholder="Tuliskan isi pembahasan esai/jurnal utama di sini..."
-                            className="w-full px-4 py-3 rounded-b-xl border border-gray-300 text-gray-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all text-base leading-relaxed"
+                            placeholder="Tuliskan isi pembahasan esai / jurnal utama di sini..."
+                            className="w-full px-4 py-3 rounded-b-xl border border-stone-200 bg-stone-50 text-stone-900 placeholder:text-stone-300 focus:outline-none focus:border-stone-400 focus:bg-white focus:ring-2 focus:ring-stone-900/5 transition-all text-sm leading-relaxed disabled:opacity-50"
                         />
                     </div>
 
-                    {/* 6. DAFTAR PUSTAKA */}
+                    {/* 6. Daftar Pustaka */}
                     <div>
-                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Daftar Pustaka / Rujukan</label>
+                        <label className="block text-xs font-semibold text-stone-500 uppercase tracking-widest mb-2">Daftar Pustaka</label>
                         <textarea
                             rows={4}
                             value={dapus}
                             disabled={isPublishing}
                             onChange={(e) => setDapus(e.target.value)}
-                            placeholder="Tuliskan referensi buku, jurnal, atau data BPS di sini..."
-                            className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all text-sm"
+                            placeholder="Referensi buku, jurnal, atau data BPS..."
+                            className={inputBase}
                         />
                     </div>
 
+                    {/* Divider */}
+                    <div className="h-px bg-stone-200" />
+
+                    {/* Submit */}
                     <button
                         type="submit"
                         disabled={isPublishing || loading || uploadingImage}
-                        className="w-full py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold rounded-xl transition-all shadow-sm shadow-emerald-700/10 hover:shadow-md cursor-pointer disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
+                        className="w-full py-3.5 bg-stone-800 hover:bg-stone-900 text-white font-semibold rounded-xl transition-all shadow-sm text-sm cursor-pointer disabled:bg-stone-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                        {isPublishing ? "Memproses Publikasi..." : "Publish Artikel Resmi"}
+                        {isPublishing ? (
+                            <>
+                                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                Memproses Publikasi...
+                            </>
+                        ) : (
+                            <>
+                                Kirim ke Review Admin
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                                </svg>
+                            </>
+                        )}
                     </button>
-                </form>
 
-            </div>
+                </form>
+            </main>
         </div>
     );
 }
